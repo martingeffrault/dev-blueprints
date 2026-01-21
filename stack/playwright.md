@@ -1,7 +1,7 @@
 # Playwright (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Latest
+> **Versions covered**: Playwright 1.49-1.57
 > **Purpose**: End-to-end testing for modern web apps
 
 ---
@@ -397,10 +397,194 @@ test.use({ storageState: 'playwright/.auth/user.json' });
 
 ---
 
+## 2025-2026 Changelog
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| **1.57** | Nov 2025 | Chrome for Testing (no more Chromium), Speedboard, Service Worker routing |
+| **1.56** | Oct 2025 | Playwright Agents (AI test generation), testStepInfo.titlePath |
+| **1.55** | Sep 2025 | Debian 13 Trixie support |
+| **1.49** | Jan 2025 | New headless mode default, accessibility API removed |
+
+### Playwright 1.57 Breaking Changes
+
+**Chrome for Testing (No More Chromium):**
+```typescript
+// ✅ No code changes needed — Chromium → Chrome for Testing
+// Your tests should continue to work
+// Main visible change: Chrome icon in toolbar instead of Chromium
+
+// If you need old behavior (rare):
+// playwright.config.ts
+export default defineConfig({
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        channel: 'chromium', // Explicitly use Chromium (not recommended)
+      },
+    },
+  ],
+});
+```
+
+**Speedboard — Find Slow Tests:**
+```bash
+# View slowest tests in HTML reporter
+npx playwright test
+npx playwright show-report
+# → Click "Speedboard" tab to see tests sorted by duration
+```
+
+**Service Worker Network Routing:**
+```typescript
+// NEW — Route Service Worker requests (Chromium only)
+await context.route('**/api/**', route => {
+  // Now also intercepts Service Worker requests!
+  return route.fulfill({ json: mockData });
+});
+
+// Opt-out if needed:
+// Set PLAYWRIGHT_DISABLE_SERVICE_WORKER_NETWORK=1
+
+// Service Worker console messages:
+worker.on('console', msg => console.log('SW:', msg.text()));
+// Set PLAYWRIGHT_DISABLE_SERVICE_WORKER_CONSOLE=1 to opt-out
+```
+
+**WebServer Wait Field:**
+```typescript
+// NEW — Wait for specific log message before starting tests
+// playwright.config.ts
+export default defineConfig({
+  webServer: {
+    command: 'npm run dev',
+    url: 'http://localhost:3000',
+    wait: /Server started/, // Wait for this regex in stdout
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
+
+### Playwright 1.56 — AI Test Agents
+
+**Playwright Agents for AI Test Generation:**
+```bash
+# Generate agent definitions for AI assistants
+npx playwright generate-agents
+
+# Three agents are created:
+# 🎭 planner — explores app, produces Markdown test plan
+# 🎭 generator — transforms plan into Playwright test files
+# 🎭 healer — executes tests, auto-repairs failures
+```
+
+**Playwright MCP Server (AI Integration):**
+```json
+// Configure for Claude Desktop (~/.config/claude/claude_desktop_config.json)
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+```typescript
+// MCP uses accessibility tree — no screenshots needed!
+// AI can now:
+// - Generate tests from natural language
+// - Navigate and interact with pages
+// - Self-heal broken selectors
+// - Debug and fix failing tests
+```
+
+**Auto-generate toBeVisible() Assertions:**
+```bash
+# In codegen UI, enable auto-assertions
+npx playwright codegen localhost:3000
+# → Settings → Enable "Auto-generate assertions"
+# Now clicking elements auto-adds toBeVisible() checks
+```
+
+**testStepInfo.titlePath:**
+```typescript
+// NEW — Get full title path in custom reporters
+class MyReporter {
+  onStepEnd(test, result, step) {
+    // Returns: ['auth.spec.ts', 'login flow', 'fill credentials']
+    console.log(step.titlePath);
+  }
+}
+```
+
+### Playwright 1.49 Breaking Changes
+
+**New Headless Mode Default:**
+```typescript
+// Chrome's new headless = real Chrome (not stripped-down Chromium)
+// More accurate for E2E testing
+// Opt into explicitly:
+export default defineConfig({
+  projects: [{
+    name: 'chromium',
+    use: {
+      channel: 'chromium', // Uses new headless Chrome
+    },
+  }],
+});
+```
+
+**page.accessibility Removed:**
+```typescript
+// ❌ REMOVED — After 3 years deprecated
+const snapshot = await page.accessibility.snapshot();
+
+// ✅ DO — Use dedicated accessibility testing libraries
+import AxeBuilder from '@axe-core/playwright';
+
+test('should be accessible', async ({ page }) => {
+  await page.goto('/');
+  const results = await new AxeBuilder({ page }).analyze();
+  expect(results.violations).toEqual([]);
+});
+```
+
+**Deprecated Packages:**
+```bash
+# ❌ No longer updated:
+@playwright/experimental-ct-vue2   # Vue 2 is EOL
+@playwright/experimental-ct-solid  # Use regular Playwright
+
+# ❌ No updates for:
+# WebKit on Ubuntu 20.04 / Debian 11
+# Upgrade your OS to get WebKit updates
+```
+
+**Chromium Extension Changes:**
+```typescript
+// ❌ BREAKING — Manifest V2 extensions no longer supported
+// Migrate your extensions to Manifest V3
+
+// Manifest V3 still works:
+const context = await chromium.launchPersistentContext('/tmp/profile', {
+  headless: false,
+  args: [
+    `--disable-extensions-except=${extensionPath}`,
+    `--load-extension=${extensionPath}`,
+  ],
+});
+```
+
+---
+
 ## Resources
 
 - [Official Playwright Documentation](https://playwright.dev/)
 - [Best Practices](https://playwright.dev/docs/best-practices)
 - [Locators Guide](https://playwright.dev/docs/locators)
 - [Trace Viewer](https://playwright.dev/docs/trace-viewer)
-- [BrowserStack Guide](https://www.browserstack.com/guide/playwright-best-practices)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
+- [Playwright Test Agents](https://playwright.dev/docs/test-agents)
+- [Release Notes](https://playwright.dev/docs/release-notes)

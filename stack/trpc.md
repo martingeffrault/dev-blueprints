@@ -499,9 +499,203 @@ function App() {
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 10.x | 2024 | Stable, React Query v5 support |
-| 11.x | 2025 | Improved streaming, better error handling |
-| 11.x | 2025 | Enhanced Server Components support |
+| **11.0** | Mar 2025 | FormData/Blob support, SSE subscriptions, TanStack Query v5 |
+| 11.8 | Dec 2025 | Lazy-loading routers, HTTP/2 support |
+| 10.x | 2024 | Stable foundation |
+
+### tRPC v11 Breaking Changes
+
+**Transformers Moved to Links (Required):**
+```typescript
+// ❌ OLD — Transformer at client level
+const trpcClient = trpc.createClient({
+  transformer: superjson,
+  links: [httpBatchLink({ url: '/api/trpc' })],
+});
+
+// ✅ NEW — Transformer in link
+const trpcClient = trpc.createClient({
+  links: [
+    httpBatchLink({
+      url: '/api/trpc',
+      transformer: superjson, // Moved here!
+    }),
+  ],
+});
+```
+
+**React Query v5 Changes:**
+```typescript
+// ❌ OLD — isLoading
+const { data, isLoading } = trpc.user.getById.useQuery({ id });
+
+// ✅ NEW — isPending (React Query v5)
+const { data, isPending } = trpc.user.getById.useQuery({ id });
+
+// Also: isFetching remains for background refetches
+```
+
+**Minimum Version Requirements (v11):**
+- Node.js ≥18 (for FormData, File, Blob, ReadableStream)
+- React ≥18.2.0
+- TypeScript ≥5.7.2
+
+**SSG Helper Renaming:**
+```typescript
+// ❌ OLD — createProxySSGHelpers (deprecated)
+import { createProxySSGHelpers } from '@trpc/react-query/server';
+
+// ✅ NEW — createSSGHelpers
+import { createSSGHelpers } from '@trpc/react-query/server';
+```
+
+**Middleware rawInput → getRawInput:**
+```typescript
+// ❌ OLD — Direct property access
+const myMiddleware = t.middleware(({ ctx, rawInput, next }) => {
+  console.log(rawInput);
+  return next({ ctx });
+});
+
+// ✅ NEW — Use method
+const myMiddleware = t.middleware(async ({ ctx, getRawInput, next }) => {
+  const rawInput = await getRawInput();
+  console.log(rawInput);
+  return next({ ctx });
+});
+```
+
+**Content-Type Validation (v11):**
+```typescript
+// ❌ BREAKING — Manual POST requests without Content-Type will fail
+fetch('/api/trpc/user.create', {
+  method: 'POST',
+  body: JSON.stringify({ name: 'John' }),
+  // Missing Content-Type header → 415 Unsupported Media Type
+});
+
+// ✅ NEW — Always include Content-Type
+fetch('/api/trpc/user.create', {
+  method: 'POST',
+  body: JSON.stringify({ name: 'John' }),
+  headers: { 'Content-Type': 'application/json' },
+});
+```
+
+### tRPC v11 New Features
+
+**FormData & Binary Support:**
+```typescript
+// NEW — Upload files directly!
+const uploadFile = publicProcedure
+  .input(z.instanceof(FormData))
+  .mutation(async ({ input }) => {
+    const file = input.get('file') as File;
+    const buffer = await file.arrayBuffer();
+    // Process file...
+    return { filename: file.name, size: file.size };
+  });
+
+// Client side
+const formData = new FormData();
+formData.append('file', selectedFile);
+trpc.uploadFile.mutate(formData);
+```
+
+**SSE Subscriptions (No WebSocket Needed!):**
+```typescript
+// Server — async generator subscription
+const appRouter = router({
+  onUpdate: publicProcedure.subscription(async function* () {
+    while (true) {
+      const data = await getLatestData();
+      yield data;
+      await sleep(1000);
+    }
+  }),
+});
+
+// Client — httpSubscriptionLink
+import { httpSubscriptionLink } from '@trpc/client';
+
+const trpcClient = trpc.createClient({
+  links: [
+    httpSubscriptionLink({
+      url: '/api/trpc',
+      transformer: superjson,
+    }),
+  ],
+});
+
+// Use subscription
+trpc.onUpdate.useSubscription(undefined, {
+  onData: (data) => console.log('Update:', data),
+});
+```
+
+**Streaming Queries (HTTP Streaming):**
+```typescript
+// Server — yield partial results
+const streamingQuery = publicProcedure.query(async function* () {
+  yield { status: 'processing', progress: 0 };
+  // ... do work
+  yield { status: 'processing', progress: 50 };
+  // ... more work
+  yield { status: 'complete', progress: 100, result: data };
+});
+
+// Client — use httpBatchStreamLink
+import { httpBatchStreamLink } from '@trpc/client';
+```
+
+**Lazy-Loading Routers:**
+```typescript
+// NEW — Code-split routers for better bundle size
+const appRouter = router({
+  user: publicProcedure.lazy(() => import('./routers/user')),
+  post: publicProcedure.lazy(() => import('./routers/post')),
+});
+```
+
+**Short-Hand Router Definitions:**
+```typescript
+// NEW — Cleaner nested router syntax
+const appRouter = router({
+  user: {
+    getById: publicProcedure
+      .input(z.object({ id: z.string() }))
+      .query(({ input }) => getUserById(input.id)),
+    list: publicProcedure.query(() => getUsers()),
+  },
+});
+```
+
+**Retry Link:**
+```typescript
+// NEW — Automatic retry for failed requests
+import { retryLink } from '@trpc/client';
+
+const trpcClient = trpc.createClient({
+  links: [
+    retryLink({
+      retry: (opts) => opts.error.data?.code === 'INTERNAL_SERVER_ERROR',
+    }),
+    httpBatchLink({ url: '/api/trpc', transformer: superjson }),
+  ],
+});
+```
+
+**HTTP/2 Server:**
+```typescript
+// NEW — Native HTTP/2 support
+import { createHTTP2Handler } from '@trpc/server/adapters/node-http';
+import http2 from 'node:http2';
+
+const server = http2.createSecureServer(
+  { key: keyFile, cert: certFile },
+  createHTTP2Handler({ router: appRouter, createContext })
+);
+```
 
 ### Error Handling Improvements (v11)
 

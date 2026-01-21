@@ -514,9 +514,260 @@ app.onError((err, c) => {
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 4.0 | 2024 | Improved middleware, better types |
-| 4.x | 2025 | HonoX meta-framework, JSX improvements |
-| 2025 | Trend | Skyrocketing adoption for edge computing |
+| **4.11** | Dec 2025 | NotFoundResponse type, middleware type fixes, base URL in hc |
+| **4.7** | Aug 2025 | RPC improvements, streaming enhancements |
+| **4.0** | 2024 | Improved middleware, better types |
+| **HonoX** | 2025 | File-based routing, islands architecture |
+
+### Hono RPC — Type-Safe API Client
+
+```typescript
+// server.ts — Export AppType
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+
+const app = new Hono()
+  .get('/users', async (c) => {
+    const users = await getUsers();
+    return c.json(users);
+  })
+  .get('/users/:id', async (c) => {
+    const user = await getUserById(c.req.param('id'));
+    return c.json(user);
+  })
+  .post(
+    '/users',
+    zValidator('json', z.object({ name: z.string(), email: z.string().email() })),
+    async (c) => {
+      const data = c.req.valid('json');
+      const user = await createUser(data);
+      return c.json(user, 201);
+    }
+  );
+
+// Export type for client
+export type AppType = typeof app;
+export default app;
+```
+
+```typescript
+// client.ts — Fully typed API calls
+import { hc } from 'hono/client';
+import type { AppType } from './server';
+
+const client = hc<AppType>('http://localhost:3000');
+
+// Type-safe requests — input and output types inferred!
+const users = await client.users.$get();
+const user = await client.users[':id'].$get({ param: { id: '123' } });
+const newUser = await client.users.$post({
+  json: { name: 'John', email: 'john@example.com' }
+});
+
+// TypeScript errors if you pass wrong types!
+```
+
+**RPC Base URL Types (v4.11+):**
+```typescript
+// NEW — Type-safe base URL for SWR/TanStack Query keys
+import { hc } from 'hono/client';
+
+const client = hc<AppType, 'http://api.example.com'>('http://api.example.com');
+
+// URL is now typed as 'http://api.example.com/users'
+const url = client.users.$url();
+```
+
+**RPC NotFoundResponse (v4.11+):**
+```typescript
+// NEW — Properly typed 404 responses
+app.get('/users/:id', async (c) => {
+  const user = await getUserById(c.req.param('id'));
+  if (!user) {
+    return c.notFound(); // Type is now inferred on client
+  }
+  return c.json(user);
+});
+```
+
+**RPC Performance Tips:**
+```typescript
+// If your IDE is slow, split routes into multiple files
+// and chain them to preserve types:
+
+// routes/users.ts
+const users = new Hono()
+  .get('/', async (c) => c.json([]))
+  .post('/', async (c) => c.json({}));
+
+// routes/posts.ts
+const posts = new Hono()
+  .get('/', async (c) => c.json([]));
+
+// index.ts — Chain to preserve types
+const app = new Hono()
+  .route('/users', users)
+  .route('/posts', posts);
+
+export type AppType = typeof app;
+```
+
+### HonoX — File-Based Meta-Framework
+
+```
+# HonoX Project Structure
+my-honox-app/
+├── app/
+│   ├── routes/
+│   │   ├── _renderer.tsx    # Root renderer (layout)
+│   │   ├── index.tsx        # /
+│   │   ├── about.tsx        # /about
+│   │   ├── posts/
+│   │   │   ├── index.tsx    # /posts
+│   │   │   └── [id].tsx     # /posts/:id
+│   │   └── api/
+│   │       └── users.ts     # /api/users
+│   ├── islands/             # Client-side interactive components
+│   │   ├── Counter.tsx
+│   │   └── SearchBar.tsx
+│   └── components/          # Server components (no hydration)
+│       └── Header.tsx
+├── vite.config.ts
+└── package.json
+```
+
+**HonoX Renderer (Layout):**
+```tsx
+// app/routes/_renderer.tsx
+import { jsxRenderer } from 'hono/jsx-renderer';
+
+export default jsxRenderer(({ children, title }) => (
+  <html>
+    <head>
+      <title>{title ?? 'My HonoX App'}</title>
+      <script type="module" src="/app/client.ts"></script>
+    </head>
+    <body>
+      <header>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/about">About</a>
+        </nav>
+      </header>
+      <main>{children}</main>
+    </body>
+  </html>
+));
+```
+
+**HonoX Page:**
+```tsx
+// app/routes/index.tsx
+import { createRoute } from 'honox/factory';
+import Counter from '../islands/Counter';
+
+export default createRoute((c) => {
+  return c.render(
+    <div>
+      <h1>Welcome to HonoX</h1>
+      <p>This is server-rendered HTML</p>
+
+      {/* This island will be hydrated on the client */}
+      <Counter initial={0} />
+    </div>,
+    { title: 'Home' }
+  );
+});
+```
+
+**HonoX Islands (Client-Side Hydration):**
+```tsx
+// app/islands/Counter.tsx
+import { useState } from 'hono/jsx';
+
+// Only this component's JS is sent to the browser
+export default function Counter({ initial }: { initial: number }) {
+  const [count, setCount] = useState(initial);
+
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <button onClick={() => setCount(count + 1)}>+</button>
+      <button onClick={() => setCount(count - 1)}>-</button>
+    </div>
+  );
+}
+```
+
+**HonoX API Route:**
+```typescript
+// app/routes/api/users.ts
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { z } from 'zod';
+
+const app = new Hono()
+  .get('/', async (c) => {
+    const users = await getUsers();
+    return c.json(users);
+  })
+  .post(
+    '/',
+    zValidator('json', z.object({ name: z.string() })),
+    async (c) => {
+      const data = c.req.valid('json');
+      return c.json(await createUser(data), 201);
+    }
+  );
+
+export default app;
+```
+
+### Streaming Responses
+
+```typescript
+// Server-Sent Events (SSE)
+import { Hono } from 'hono';
+import { streamSSE } from 'hono/streaming';
+
+const app = new Hono();
+
+app.get('/sse', async (c) => {
+  return streamSSE(c, async (stream) => {
+    let id = 0;
+    while (true) {
+      const data = await getLatestData();
+      await stream.writeSSE({
+        data: JSON.stringify(data),
+        event: 'update',
+        id: String(id++),
+      });
+      await stream.sleep(1000);
+    }
+  });
+});
+
+// Streaming text
+app.get('/stream', async (c) => {
+  return c.streamText(async (stream) => {
+    for (const chunk of generateChunks()) {
+      await stream.write(chunk);
+      await stream.sleep(100);
+    }
+  });
+});
+```
+
+**Note**: SSE is not yet supported in the RPC client. Use EventSource directly for SSE endpoints:
+```typescript
+// Client-side SSE (use EventSource, not hc)
+const eventSource = new EventSource('/sse');
+eventSource.addEventListener('update', (event) => {
+  const data = JSON.parse(event.data);
+  console.log('Update:', data);
+});
+```
 
 ---
 
