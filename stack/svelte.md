@@ -497,8 +497,48 @@ export function useFetch<T>(url: string) {
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 5.0 | Oct 2024 | Runes, Snippets, Event attributes |
+| **5.25** | **2025** | **`$derived` now reassignable** — use `const` for read-only |
 | 5.x | 2025 | Stability improvements |
 | SvelteKit 2.x | 2025 | Full Svelte 5 integration |
+
+### Svelte 5.25+ Breaking Change
+
+```svelte
+<!-- Before 5.25: $derived was always read-only -->
+<!-- After 5.25: $derived can be reassigned for optimistic UI -->
+
+<script>
+  let count = $state(0);
+
+  // Can be reassigned as of 5.25
+  let doubled = $derived(count * 2);
+
+  // Use const if you want read-only behavior
+  const tripledReadonly = $derived(count * 3);
+
+  function optimisticUpdate() {
+    doubled = 100; // ✅ Now works! Useful for optimistic UI
+    // tripledReadonly = 100; // ❌ Error: const
+  }
+</script>
+```
+
+### Migration Tool
+
+```bash
+# Automatic migration from Svelte 4 to 5
+npx sv migrate svelte-5
+
+# What it migrates:
+# - let → $state
+# - $: x = ... → $derived(...)
+# - $: { effect } → $effect(() => { effect })
+# - export let → $props()
+# - on:click → onclick
+# - <slot> → {@render children()}
+```
+
+**Note:** Not everything migrates automatically. Review generated code and handle edge cases manually.
 
 ### Migration from Svelte 4
 

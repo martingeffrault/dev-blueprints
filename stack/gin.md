@@ -894,6 +894,87 @@ router.Use(authMiddleware)    // 4. Authentication (route-specific)
 | 1.10 | 2024 | Performance improvements, bug fixes |
 | 1.10.x | 2025 | Continued maintenance, security patches |
 
+### Go 1.22/1.23 Language Features
+
+Go 1.22 and 1.23 introduced significant language features that affect Gin development:
+
+**Range Over Integers (Go 1.22+):**
+```go
+// ✅ NEW — Range over int
+for i := range 10 {
+    fmt.Println(i) // 0, 1, 2, ..., 9
+}
+
+// Previously required
+for i := 0; i < 10; i++ {
+    fmt.Println(i)
+}
+```
+
+**Range Over Functions / Iterators (Go 1.23+):**
+```go
+import "iter"
+
+// Custom iterator using Seq/Seq2
+func AllUsers(db *gorm.DB) iter.Seq2[int, *User] {
+    return func(yield func(int, *User) bool) {
+        var users []User
+        db.Find(&users)
+        for i, user := range users {
+            if !yield(i, &user) {
+                return
+            }
+        }
+    }
+}
+
+// Usage
+for i, user := range AllUsers(db) {
+    fmt.Printf("%d: %s\n", i, user.Name)
+}
+```
+
+**New Standard Library Iterator Functions (Go 1.23+):**
+```go
+import "slices"
+import "maps"
+
+// slices.All — iterate with index
+for i, v := range slices.All(mySlice) {
+    fmt.Println(i, v)
+}
+
+// slices.Values — iterate values only
+for v := range slices.Values(mySlice) {
+    fmt.Println(v)
+}
+
+// slices.Collect — collect iterator to slice
+collected := slices.Collect(myIterator)
+
+// maps.Keys, maps.Values, maps.All
+for k := range maps.Keys(myMap) {
+    fmt.Println(k)
+}
+```
+
+**Loop Variable Fix (Go 1.22+):**
+```go
+// Go 1.21 and earlier — loop variable captured by reference (bug-prone)
+for _, v := range values {
+    go func() {
+        fmt.Println(v) // All goroutines print same value
+    }()
+}
+
+// Go 1.22+ — loop variable scoped per iteration (fixed!)
+for _, v := range values {
+    go func() {
+        fmt.Println(v) // Each goroutine prints correct value
+    }()
+}
+```
+
 ### Gin Ecosystem 2025
 
 - **gin-contrib**: Official middleware collection
