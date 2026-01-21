@@ -427,6 +427,36 @@ process.on('SIGINT', async () => {
 | 23.6 | Jan 2025 | TypeScript direct execution improvements |
 | 24.0 | Oct 2025 | LTS release, reduced external dependencies |
 
+### Native TypeScript: Important Details
+
+**Recommended tsconfig.json for native execution:**
+```json
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "nodenext",
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  }
+}
+```
+
+**Key limitations:**
+- **No type checking** — Node only strips types, run `tsc --noEmit` separately
+- **Explicit imports** — Use `import type { Foo }` for type-only imports
+- **No enums/decorators** — Unless `--experimental-transform-types` flag used
+- **File extensions** — Import with `.ts` extension: `import { foo } from './utils.ts'`
+
+**Production recommendation:**
+```bash
+# Development: native execution
+node --watch src/index.ts
+
+# Production: still compile for safety
+tsc && node dist/index.js
+```
+
 ### Version Strategy
 
 | Type | Version | Use Case |
