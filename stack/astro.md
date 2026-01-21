@@ -515,14 +515,107 @@ export default defineConfig({
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 4.0 | Dec 2023 | Dev toolbar, i18n routing |
-| 5.0 | Dec 2024 | Server Islands, unified output modes, env API |
-| 5.9 | 2025 | CSP support, security improvements |
+| **5.0** | **Dec 2024** | **Server Islands**, Content Layer API, unified output |
+| 5.15 | Oct 2025 | View Transitions baseline, stability |
+| **6.0 alpha** | **Dec 2025** | Early preview available |
+
+### Astro 5.0 Breaking Changes
+
+**Content Collections Config Renamed:**
+```typescript
+// ❌ OLD — src/content/config.ts (deprecated)
+// ✅ NEW — src/content/config.ts → src/content.config.ts
+
+// The file is now at the root level, not inside content/
+```
+
+**Explicit Collection Definition Required:**
+```typescript
+// ❌ OLD — Collections auto-generated for all folders in src/content/
+// ✅ NEW — Collections MUST be defined in content.config.ts
+
+// If you have src/content/blog/ but don't define it,
+// it will NOT be a collection anymore
+```
+
+**Content Layer API Changes:**
+```typescript
+// src/content.config.ts (NEW location!)
+import { defineCollection, z } from 'astro:content';
+
+// The loader option replaces "magic" file discovery
+const blog = defineCollection({
+  type: 'content', // or 'data'
+  schema: z.object({
+    title: z.string(),
+    date: z.date(),
+  }),
+});
+
+export const collections = { blog };
+```
+
+**Import Changes:**
+```typescript
+// ❌ OLD — z from astro:content deprecated
+import { z } from 'astro:content';
+
+// ✅ NEW — Use astro/zod
+import { z } from 'astro/zod';
+```
+
+### Server Islands Enhancements
+
+```astro
+---
+// Server Islands can now set headers (customize cache lifetime)
+---
+<UserProfile server:defer>
+  <div slot="fallback">Loading profile...</div>
+</UserProfile>
+```
+
+Features added since 5.0:
+- Set headers inside islands (customize cache per-island)
+- Works with automatic page compression
+- Props automatically encrypted for privacy
+
+### View Transitions Baseline (Oct 2025)
+
+View Transitions are now **Baseline Newly Available** — supported in all major browsers!
+
+```astro
+---
+import { ViewTransitions } from 'astro:transitions';
+---
+<head>
+  <ViewTransitions />
+</head>
+
+<!-- Persist state across navigation -->
+<Counter client:load transition:persist />
+
+<!-- Keep existing props on navigation -->
+<Island transition:persist transition:persist-props />
+```
+
+### Astro 6 Alpha (December 2025)
+
+Early alpha of Astro v6 is available for testing:
+```bash
+npm install astro@next
+```
+
+Key changes being tested:
+- Further Content Layer improvements
+- Enhanced build performance
+- New integration APIs
 
 ### Astro 5.0 Highlights
 
 - **Server Islands**: Deferred rendering for dynamic content
 - **Unified output modes**: Static and hybrid merged
-- **Content Layer API**: New data loading primitives
+- **Content Layer API**: Explicit content configuration
 - **Type-safe env variables**: `astro:env` module
 - **Simplified prerendering**: Per-page control
 

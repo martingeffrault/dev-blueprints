@@ -532,11 +532,99 @@ deno check src/main.ts
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | Oct 2024 | npm compatibility, package.json support |
-| 2.1 | Dec 2024 | Long-term support, improved stability |
+| **2.0** | **Oct 2024** | **npm compatibility**, package.json support, LTS model |
+| **2.1** | **Dec 2024** | **First LTS release**, 6 months support |
 | 2.2 | Feb 2025 | OpenTelemetry, lint plugins, new lint rules |
 | 2.3 | May 2025 | Local npm packages, improved deno compile |
 | 2.4 | Aug 2025 | deno bundle returns, enhanced tooling |
+
+### Deno 2.0 Breaking Changes (from 1.x)
+
+**CLI Command Changes:**
+```bash
+# ❌ OLD — deno cache
+deno cache main.ts
+
+# ✅ NEW — deno install --entrypoint
+deno install --entrypoint main.ts
+```
+
+```bash
+# ❌ OLD — deno vendor command
+deno vendor main.ts
+
+# ✅ NEW — vendor option in deno.json
+{
+  "vendor": true
+}
+```
+
+**CLI Flag Changes:**
+```bash
+# ❌ OLD                    # ✅ NEW
+--allow-none               --permit-no-files
+--jobs=4 --parallel        DENO_JOBS=4 deno test --parallel
+--ts                       --ext=ts
+```
+
+**nodeModulesDir is Now an Enum:**
+```json
+// deno.json
+{
+  // ❌ OLD — boolean
+  "nodeModulesDir": true,
+
+  // ✅ NEW — enum: "none" | "auto" | "manual"
+  "nodeModulesDir": "auto"
+}
+```
+
+- `none` — No node_modules directory
+- `auto` — Auto-install to global cache, create local node_modules
+- `manual` — Requires explicit `deno install`/`npm install` (default with package.json)
+
+**Required Specifier Prefixes:**
+```typescript
+// ❌ OLD — Ambiguous package names
+import { z } from "zod";
+
+// ✅ NEW — Required prefix for clarity
+import { z } from "npm:zod";
+import { assertEquals } from "jsr:@std/assert";
+```
+
+**Node.js Built-in Modules:**
+```typescript
+// ✅ Use node: specifier for Node built-ins
+import { Buffer } from "node:buffer";
+import * as fs from "node:fs";
+import * as path from "node:path";
+```
+
+### Long-Term Support (LTS)
+
+Starting with v2.1.0, Deno provides **LTS releases**:
+- 6 months of bug fixes and critical performance improvements
+- Provides stability for large-scale production deployments
+- Predictable upgrade cycles for enterprise adoption
+
+### When to Use Deno 2.0
+
+**Ideal for:**
+- **TypeScript-first projects** — Zero-config TypeScript execution
+- **Security-critical applications** — Financial services, healthcare, user data platforms
+- **Serverless/Edge** — Fast cold starts, small footprint
+- **New projects** — Modern toolchain without legacy baggage
+
+**Migration from Node.js:**
+```bash
+# Deno understands package.json and node_modules
+# Just run your existing ESM project
+deno run --allow-all main.ts
+
+# Fix any issues with the linter
+deno lint --fix
+```
 
 ### Deno 2 Key Features
 
@@ -546,6 +634,7 @@ deno check src/main.ts
 - **OpenTelemetry**: Built-in observability
 - **Lint Plugins**: Extensible linting (2.2+)
 - **Local npm Packages**: Use workspace packages (2.3+)
+- **LTS Model**: Enterprise-grade stability guarantees
 
 ---
 
