@@ -619,6 +619,39 @@ const value = await redis.get('key');
 - **99%+ npm compatibility**: Most packages work
 - **VS Code test integration**: Built-in
 
+### Bun 1.2.x Updates (2025)
+
+**pnpm-Style Isolated Linker (v1.2.19+):**
+```bash
+# Install with pnpm-style isolated node_modules
+bun install --linker=isolated
+
+# Understand dependency tree
+bun why lodash
+
+# Package.json management
+bun pm pkg get name version
+bun pm pkg set version 1.0.0
+```
+
+**Yarn Lock Migration (v1.2.20+):**
+```bash
+# Automatic yarn.lock v1 migration to bun.lock
+bun install  # Automatically migrates yarn.lock
+
+# 40x faster AbortSignal.timeout (v1.2.20)
+# Uses same implementation as setTimeout
+```
+
+**Node.js fs.glob() Compatibility (v1.2.19+):**
+```typescript
+import { glob } from 'node:fs';
+
+// Array patterns and exclude options now supported
+const files = await glob(['**/*.ts', '**/*.tsx'], {
+  exclude: ['node_modules/**', 'dist/**']
+});
+
 ---
 
 ## Quick Reference

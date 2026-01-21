@@ -1,7 +1,7 @@
 # Docker (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Docker 24+, BuildKit 0.12+
+> **Versions covered**: Docker 26+, BuildKit 0.26+, Compose v2.39+
 > **Purpose**: Container platform for building, shipping, and running applications
 
 ---
@@ -483,12 +483,46 @@ COPY . .
 | BuildKit default | 2023+ | Faster builds, better caching |
 | Docker Scout | 2023+ | Vulnerability scanning |
 | Compose v2 | 2023+ | `docker compose` (no hyphen) |
-| Wasm support | 2024+ | WebAssembly containers |
-| Docker Desktop 4.x | 2024-2025 | Improved performance |
+| **Compose v5 SDK** | **2025** | Go SDK for programmatic Compose |
+| **Compose v2.39** | **Jan 2026** | `attach`, `stats`, `--with-dependencies` |
+| **Buildx v0.26** | **Jan 2026** | Multi-platform builds improvements |
 | `version:` obsolete | 2024+ | Compose files start with `services:` directly |
 | containerd runtime | 2025 | Same runtime as Kubernetes |
 | Serverless containers | 2025 | AWS Fargate, Cloud Run, Azure Container Apps |
 | MicroVM sandboxes | 2025+ | Firecracker, Kata Containers for untrusted workloads |
+
+### Docker Compose 2025 Updates
+
+**New Commands (v2.30+):**
+```bash
+# Attach to a running service
+docker compose attach web
+
+# Live resource usage statistics
+docker compose stats
+
+# Build with dependencies
+docker compose build --with-dependencies web
+```
+
+**Compose v5 SDK:**
+```go
+// Compose v5 is functionally identical to v2
+// But introduces an official Go SDK for programmatic use
+import "github.com/docker/compose/v5/pkg/api"
+
+// Use Compose in your Go applications
+client := api.NewComposeService(...)
+```
+
+**File Naming Convention:**
+```bash
+# Modern: compose.yaml (preferred)
+# Legacy: docker-compose.yaml (still works)
+
+# Rename for consistency:
+mv docker-compose.yaml compose.yaml
+```
 
 ### 2025 Paradigm Shift
 

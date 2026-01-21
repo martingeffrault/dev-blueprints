@@ -1,7 +1,7 @@
 # Qwik (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Qwik 1.x
+> **Versions covered**: Qwik 1.x, 2.x (beta)
 > **Purpose**: Resumable framework with zero hydration and instant interactivity
 
 ---
@@ -548,7 +548,71 @@ const Component = component$(() => {
 |---------|------|-------------|
 | 1.0 | 2023 | Stable release |
 | 1.x | 2024-2025 | Improved DX, better tooling |
-| 2025 | Trend | Growing adoption for performance-critical apps |
+| **2.0 beta** | **2025** | New npm scope `@qwik.dev/*`, lighter HTML, faster task scheduler |
+
+### Qwik 2.0 Beta Key Changes
+
+**New NPM Package Scope (Breaking):**
+```typescript
+// ❌ OLD — Qwik 1.x imports
+import { component$, useSignal } from '@builder.io/qwik';
+import { routeLoader$ } from '@builder.io/qwik-city';
+
+// ✅ NEW — Qwik 2.x imports
+import { component$, useSignal } from '@qwik.dev/core';
+import { routeLoader$ } from '@qwik.dev/router';
+```
+
+**HTML Nesting Enforcement (Breaking):**
+```tsx
+// ❌ Qwik 2 enforces valid HTML nesting
+<p>
+  <div>Invalid!</div>  // Error: <p> cannot contain <div>
+</p>
+
+// ✅ Valid HTML structure
+<div>
+  <div>Valid nesting</div>
+</div>
+```
+
+**Lighter HTML Output:**
+```html
+<!-- Qwik 2.0 produces much lighter HTML -->
+<!-- - Removed comment nodes from serialization -->
+<!-- - Loader serialization disabled by default -->
+<!-- - Virtual nodes moved to end of HTML stream -->
+<!-- Result: Faster first paint, smaller page weight -->
+```
+
+**Improved Resumability:**
+```typescript
+// Qwik 2.0 optimizations:
+// - More efficient encoding for virtual nodes
+// - Lazier materialization — only creates nodes needed for user input
+// - Non-human readable data moved to end of HTML
+// - Faster UI rendering, then framework data arrives
+```
+
+**Performance Targets:**
+```
+- Average page weight 2025: 2.5MB
+- Qwik 2.0 target: Sub-10KB JavaScript payload
+- Framework data no longer blocks first paint
+- Task scheduler rewritten for faster response times
+```
+
+**Community Governance:**
+```bash
+# Qwik is now a true community project
+# - Discord renamed to "Qwik"
+# - GitHub repo moved to QwikDev organization
+# - NPM packages published under @qwik.dev scope
+# - New governance model for contributions
+```
+
+**Backward Compatibility:**
+Qwik 2.0 aims for NO breaking API changes (besides imports). The internal rewrite focuses on performance without changing how you write components.
 
 ---
 
