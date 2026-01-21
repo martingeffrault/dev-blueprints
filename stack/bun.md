@@ -532,16 +532,92 @@ import { test, expect } from 'bun:test';
 |---------|------|-------------|
 | 1.0 | Sep 2023 | Production ready |
 | 1.1 | 2024 | Windows support, improved compatibility |
-| 1.2 | 2024 | S3 client, improved bundler |
-| 1.3 | Oct 2025 | Hot reload, shell, improved testing |
+| **1.2** | **Jan 2025** | **Bun.sql (Postgres)**, Bun.s3, CSS bundler, HTML imports |
+| **1.3** | **Oct 2025** | **Unified SQL API**, Redis client, zero-config frontend |
 
-### Bun 1.3 Highlights
+### Bun 1.2 Highlights (January 2025)
+
+**Built-in Postgres Client (`Bun.sql`):**
+```typescript
+import { sql } from 'bun';
+
+// Tagged template literals — SQL injection safe
+const users = await sql`SELECT * FROM users WHERE role = ${role}`;
+
+// 50% faster than postgres.js in Node.js
+```
+
+**Built-in S3 Support (`Bun.s3`):**
+```typescript
+import { S3 } from 'bun';
+
+const bucket = new S3({
+  bucket: 'my-bucket',
+  region: 'us-east-1',
+});
+
+await bucket.put('file.txt', 'Hello, world!');
+const content = await bucket.get('file.txt');
+```
+
+**Text-Based Lockfile (JSONC):**
+- New `bun.lock` is human-readable JSONC format
+- Easier to review in pull requests
+- Simpler merge conflict resolution
+- 30% faster cached installs
+
+**CSS Bundler:**
+- Derived from LightningCSS, rewritten in Zig
+- Integrated with Bun's JS/TS bundler
+- Automatic bundling and minification
+
+**HTML Imports (Frontend Development):**
+```typescript
+// Import HTML with auto-bundling of JS/CSS
+import './index.html';
+
+// Works seamlessly with React, TypeScript, Tailwind
+```
+
+**Breaking Change — Working Directory:**
+```bash
+# Before 1.2: Working directory was shell's current directory
+# After 1.2: Working directory is package.json's parent directory
+# This now matches npm/yarn behavior
+```
+
+### Bun 1.3 Highlights (October 2025)
+
+**Unified SQL API (`Bun.SQL`):**
+```typescript
+import { SQL } from 'bun';
+
+// Zero dependencies — works with MySQL, MariaDB, PostgreSQL, SQLite
+const db = new SQL('postgres://localhost/mydb');
+// OR: new SQL('mysql://localhost/mydb')
+// OR: new SQL('sqlite:./database.db')
+
+const users = await db.query`SELECT * FROM users`;
+```
+
+**Built-in Redis Client:**
+```typescript
+import { Redis } from 'bun';
+
+const redis = new Redis('redis://localhost:6379');
+await redis.set('key', 'value');
+const value = await redis.get('key');
+```
+
+**Zero-Config Frontend Development:**
+- First-class support for frontend tooling
+- No configuration needed for React, Vue, Svelte
+- Built-in HMR for all major frameworks
 
 - **`--hot` flag**: Built-in hot reload (replaces nodemon)
-- **Shell API**: `Bun.shell` for scripting
-- **Improved compatibility**: 99%+ npm packages work
-- **Better memory management**: Reduced footprint
-- **Faster module resolution**: Improved startup times
+- **Shell API**: `Bun.$` for shell scripting
+- **99%+ npm compatibility**: Most packages work
+- **VS Code test integration**: Built-in
 
 ---
 

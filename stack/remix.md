@@ -601,15 +601,108 @@ const { users } = useLoaderData<typeof loader>();
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | 2024 | React Router v7 convergence |
-| 2.x | 2025 | Stability, React 19 support |
+| 2.9 | 2024 | Single Fetch preview (`unstable_singleFetch`) |
+| 2.13 | 2024 | Single Fetch stabilized (`v3_singleFetch`) |
+| **2.x → RRv7** | **2024-2025** | **Remix becomes React Router v7 framework mode** |
 | 3.0 | 2026 (planned) | Full-stack `remix` package |
 
-### React Router v7 Framework Mode
+### Remix → React Router v7 Migration
 
-- Loaders/actions adopted by React Router v7
-- Essentially "Remix v2 rebranded"
-- Same patterns work in both
+"What we planned to release as Remix v3 is now going to be released as React Router v7."
+
+**Migration Overview:**
+- If all Remix v2 future flags enabled, migration is mostly dependency updates
+- Codemod available for automatic migration
+
+**Package Changes:**
+```bash
+# Before (Remix)
+@remix-run/node
+@remix-run/react
+@remix-run/dev
+
+# After (React Router v7)
+react-router  # Unified package
+@react-router/node  # Server adapters
+```
+
+**Import Changes:**
+```typescript
+// Before (Remix)
+import { json, redirect, LoaderFunctionArgs } from '@remix-run/node';
+import { useLoaderData, Form } from '@remix-run/react';
+
+// After (React Router v7)
+import { useLoaderData, Form, redirect } from 'react-router';
+import type { Route } from './+types/route-name';
+```
+
+### Single Fetch (Default in React Router v7)
+
+**Single Fetch** replaces multiple parallel loader calls with a single request:
+
+```typescript
+// Enable in Remix v2 (required before RRv7 migration)
+// remix.config.js or vite.config.ts
+export default {
+  future: {
+    v3_singleFetch: true,  // Stabilized flag
+  },
+};
+```
+
+**Breaking Changes with Single Fetch:**
+```typescript
+// ❌ json() and defer() are DEPRECATED in React Router v7
+import { json, defer } from '@remix-run/node';
+
+export async function loader() {
+  return json({ users });  // ❌ Deprecated
+}
+
+// ✅ Return naked objects instead
+export async function loader() {
+  return { users };  // ✅ Direct return
+}
+
+// ✅ Streaming with promises (replaces defer)
+export async function loader() {
+  return {
+    critical: await getCriticalData(),
+    streamed: getSlowData(),  // Promise streams automatically
+  };
+}
+```
+
+**Required entry.server.tsx Changes:**
+```typescript
+// Must use streaming renderer (not renderToString)
+import { renderToPipeableStream } from 'react-dom/server';
+
+// Client-side must wrap hydrateRoot in startTransition
+import { startTransition } from 'react';
+import { hydrateRoot } from 'react-dom/client';
+
+startTransition(() => {
+  hydrateRoot(document, <App />);
+});
+```
+
+### Future Flags to Enable Before Migration
+
+```typescript
+// remix.config.js
+export default {
+  future: {
+    v3_fetcherPersist: true,
+    v3_relativeSplatPath: true,
+    v3_throwAbortReason: true,
+    v3_singleFetch: true,
+    v3_lazyRouteDiscovery: true,
+    v3_routeConfig: true,
+  },
+};
+```
 
 ---
 
