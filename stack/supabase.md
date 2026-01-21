@@ -524,10 +524,144 @@ supabase db push
 
 | Feature | Date | Description |
 |---------|------|-------------|
-| Edge Functions | 2023+ | Deno-based serverless |
-| Realtime v2 | 2024 | Improved subscription model |
-| Vector/pgvector | 2024 | AI embeddings support |
-| Branching | 2025 | Database branches for dev |
+| **New API Keys** | Jun 2025 | `sb_publishable_*` replaces anon key, `sb_secret_*` replaces service_role |
+| **OAuth 2.1 Server** | Nov 2025 | Public beta for OAuth 2.1 authorization server |
+| **Vector Buckets** | Oct 2025 | Cold storage for embeddings (S3 Vectors, alpha) |
+| **Analytics Buckets** | Oct 2025 | Iceberg/S3 Tables for analytical workloads (alpha) |
+| **Realtime Settings** | 2025 | Dashboard config, channel restrictions |
+| Branching | 2024+ | Database branches for dev |
+
+### New API Keys (June 2025)
+
+```typescript
+// ❌ OLD — anon key and service_role key
+const supabase = createClient(url, 'eyJ...');  // anon key
+
+// ✅ NEW — Publishable and secret keys
+// sb_publishable_* — Client-safe (replaces anon key)
+// sb_secret_* — Server-only (replaces service_role key)
+
+// Client-side
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_PUBLISHABLE_KEY  // sb_publishable_...
+);
+
+// Server-side (create multiple secret keys with different scopes)
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SECRET_KEY  // sb_secret_...
+);
+```
+
+**JWT Signing Keys:**
+```typescript
+// ❌ OLD — Symmetric secret for JWT signing
+// ✅ NEW — Dedicated JWT Signing Keys (more secure)
+// Configure in Dashboard → Auth → JWT
+```
+
+### OAuth 2.1 Server (November 2025)
+
+```typescript
+// NEW — Supabase as OAuth 2.1 authorization server
+// Your app can issue access tokens to third-party apps
+
+// Configure in Dashboard → Auth → OAuth 2.1
+// Supports:
+// - Authorization Code + PKCE
+// - Client credentials
+// - Token introspection
+// - Token revocation
+```
+
+### Security Notification Templates
+
+```typescript
+// NEW — Expanded security notifications for:
+// - Password changes
+// - Email changes
+// - Phone changes
+// - Identity linking (OAuth)
+// - MFA status changes
+
+// Configure templates in Dashboard → Auth → Email Templates
+```
+
+### Vector Buckets (Alpha)
+
+```typescript
+// NEW — Cold storage for embeddings with query engine
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(url, key);
+
+// Store embeddings in Vector Bucket
+const { data, error } = await supabase.storage
+  .from('embeddings')  // Vector bucket
+  .upload('doc1', embeddingData);
+
+// Query with similarity search
+const { data: results } = await supabase.rpc('search_embeddings', {
+  query_embedding: queryVector,
+  match_count: 10,
+});
+```
+
+### Realtime Settings
+
+```typescript
+// NEW — Configure Realtime in Dashboard
+// Settings available:
+// - Max connections per client
+// - Message rate limits
+// - Channel restrictions (public/private)
+
+// Channel restrictions:
+// - Public: Anyone can connect
+// - Private: Requires authentication
+// - Presence: Real-time user tracking
+```
+
+### Edge Functions Updates
+
+```typescript
+// NEW — Deploy Node.js apps as Edge Functions
+// supabase/functions/my-node-app/index.ts
+import express from 'npm:express@4';
+
+const app = express();
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello from Node.js on Edge!' });
+});
+
+export default app;
+```
+
+```bash
+# NEW — Download Edge Functions without Docker
+supabase functions download my-function
+
+# Bulk edit secrets
+supabase secrets set KEY1=value1 KEY2=value2
+```
+
+### Integrations Section
+
+```sql
+-- NEW — Cron Jobs (pg_cron extension)
+-- Configure in Dashboard → Integrations → Cron
+SELECT cron.schedule(
+  'cleanup-old-sessions',
+  '0 0 * * *',  -- Daily at midnight
+  $$DELETE FROM sessions WHERE created_at < NOW() - INTERVAL '30 days'$$
+);
+
+-- NEW — Queues (pg_mq extension)
+-- Configure in Dashboard → Integrations → Queues
+SELECT mq.send('email-queue', '{"to": "user@example.com", "subject": "Welcome"}');
+```
 
 ---
 

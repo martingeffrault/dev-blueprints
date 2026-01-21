@@ -1,7 +1,7 @@
 # NestJS (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: NestJS 10+
+> **Versions covered**: NestJS 10+, 11.x
 > **Purpose**: Enterprise-grade Node.js backend framework with TypeScript
 
 ---
@@ -873,6 +873,214 @@ export class UsersService {
 export class UsersService {
   constructor(private readonly repository: UsersRepository) {}
 }
+```
+
+---
+
+## 2025-2026 Changelog
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| **11.0** | Jan 2025 | Express v5 default, JSON logging, faster startup |
+| **11.1** | Mar 2025 | Reflector changes, Apollo Server v4 support |
+| 10.x | 2024 | ESM support, standalone applications |
+
+### NestJS 11 Breaking Changes
+
+**Express v5 Default — Wildcard Route Naming:**
+```typescript
+// ❌ OLD — Express v4 unnamed wildcards
+@Get('*')  // Worked in NestJS 10
+async catchAll() {}
+
+@Get('files/*')  // Worked in NestJS 10
+async serveFile() {}
+
+// ✅ NEW — Express v5 requires named wildcards
+@Get('*splat')  // Named wildcard parameter
+async catchAll(@Param('splat') path: string) {}
+
+@Get('files/*filepath')  // Named wildcard
+async serveFile(@Param('filepath') filepath: string) {}
+
+// Or use explicit regex for flexibility
+@Get(/^\/files\/(.*)$/)
+async serveFileRegex(@Param('0') filepath: string) {}
+
+// Note: This is NOT a NestJS change — it's Express v5
+// You can still use Express v4 by explicitly installing it
+```
+
+**Reflector.getAllAndMerge Returns Object (Breaking):**
+```typescript
+// ❌ OLD — Returned array in NestJS 10
+const roles = this.reflector.getAllAndMerge('roles', [
+  context.getHandler(),
+  context.getClass(),
+]);
+// roles was: ['admin', 'user'] (array)
+
+// ✅ NEW — Returns merged object in NestJS 11
+const metadata = this.reflector.getAllAndMerge('config', [
+  context.getHandler(),
+  context.getClass(),
+]);
+// metadata is now: { roles: ['admin', 'user'], cache: true } (object)
+
+// If you need array behavior, use getAllAndOverride instead
+const roles = this.reflector.getAllAndOverride<string[]>('roles', [
+  context.getHandler(),
+  context.getClass(),
+]);
+```
+
+**Faster Startup — Object References for Opaque Keys:**
+```typescript
+// INTERNAL CHANGE — Faster module initialization
+// NestJS 11 uses object references instead of string-based lookups
+// No code changes needed, just faster cold starts
+
+// Benefits:
+// - 15-20% faster application bootstrap
+// - Better memory efficiency during startup
+// - Improved module resolution performance
+```
+
+### NestJS 11 New Features
+
+**Enhanced ConsoleLogger with JSON Output:**
+```typescript
+// NEW — JSON logging for production (structured logging)
+import { NestFactory } from '@nestjs/core';
+import { ConsoleLogger } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule, {
+    logger: new ConsoleLogger({
+      // NEW in NestJS 11
+      json: process.env.NODE_ENV === 'production',
+      colors: process.env.NODE_ENV !== 'production',
+      timestamp: true,
+    }),
+  });
+  await app.listen(3000);
+}
+
+// Production output (JSON):
+// {"level":"log","message":"Application started","timestamp":"2025-01-21T10:00:00.000Z","context":"NestApplication"}
+
+// Development output (colored):
+// [Nest] 12345  - 01/21/2025, 10:00:00 AM     LOG [NestApplication] Application started
+```
+
+**Apollo Server v4 Integration:**
+```typescript
+// UPDATED — @nestjs/graphql now uses Apollo Server v4
+// package.json
+{
+  "@nestjs/graphql": "^13.0.0",
+  "@apollo/server": "^4.0.0",  // Replaces apollo-server-express
+  "graphql": "^16.0.0"
+}
+
+// ❌ OLD — Apollo Server v3 setup (NestJS 10)
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+
+GraphQLModule.forRoot<ApolloDriverConfig>({
+  driver: ApolloDriver,
+  autoSchemaFile: 'schema.gql',
+  playground: true,  // Deprecated option
+});
+
+// ✅ NEW — Apollo Server v4 setup (NestJS 11)
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+
+GraphQLModule.forRoot<ApolloDriverConfig>({
+  driver: ApolloDriver,
+  autoSchemaFile: 'schema.gql',
+  // Playground replaced with Apollo Sandbox
+  plugins: [ApolloServerPluginLandingPageLocalDefault()],
+  // Or disable in production
+  // plugins: process.env.NODE_ENV === 'production' ? [] : [ApolloServerPluginLandingPageLocalDefault()],
+});
+```
+
+**Improved TypeORM Integration:**
+```typescript
+// Better support for TypeORM 0.3.x in NestJS 11
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+
+@Module({
+  imports: [
+    TypeOrmModule.forRootAsync({
+      useFactory: () => ({
+        type: 'postgres',
+        host: process.env.DB_HOST,
+        // ... other options
+      }),
+      // NEW — Access to DataSource for migrations
+      dataSourceFactory: async (options) => {
+        const dataSource = new DataSource(options);
+        return dataSource.initialize();
+      },
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+**WebSocket Gateway Enhancements:**
+```typescript
+// Improved WebSocket gateway with better typing
+import {
+  WebSocketGateway,
+  SubscribeMessage,
+  MessageBody,
+  ConnectedSocket,
+  WsResponse,
+} from '@nestjs/websockets';
+import { Socket } from 'socket.io';
+
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+  // NEW — Better namespace handling
+  namespace: /\/ws-.+/,  // Regex namespace support
+})
+export class EventsGateway {
+  @SubscribeMessage('events')
+  handleEvent(
+    @MessageBody() data: string,
+    @ConnectedSocket() client: Socket,
+  ): WsResponse<string> {
+    return { event: 'events', data: `Received: ${data}` };
+  }
+}
+```
+
+### Migration Checklist v10 → v11
+
+```typescript
+// 1. Update wildcard routes
+// Before: @Get('*')
+// After:  @Get('*splat')
+
+// 2. Check Reflector usage
+// getAllAndMerge now returns object, not array
+// Use getAllAndOverride if you need array
+
+// 3. Update Apollo Server (if using GraphQL)
+// Replace apollo-server-express with @apollo/server
+// Update plugins configuration
+
+// 4. Review custom decorators using Reflector
+// Test metadata retrieval logic
+
+// 5. Update logging configuration for production
+// Consider switching to JSON logging
 ```
 
 ---

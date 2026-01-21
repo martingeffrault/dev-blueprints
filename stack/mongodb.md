@@ -1,7 +1,7 @@
 # MongoDB (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: MongoDB 7.x
+> **Versions covered**: MongoDB 7.x, 8.x
 > **Purpose**: Document database for flexible, scalable applications
 
 ---
@@ -543,9 +543,178 @@ mongodb://user:password@localhost:27017/mydb?authSource=admin
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| **8.0** | Aug 2025 | Queryable encryption range queries, vector search in Community |
+| **8.4** | Nov 2025 | OCSF audit logs, Ingress Queue, shard key updateability |
 | 7.0 | 2023 | Queryable encryption, compound indexes |
-| 7.x | 2024-2025 | Improved aggregation, vector search |
-| Atlas | 2025 | AI integrations, serverless instances |
+
+### MongoDB 8.0 Key Features
+
+**Queryable Encryption Range Queries:**
+```javascript
+// NEW — Range queries on encrypted fields (8.0)
+// Previously only equality ($eq) was supported
+
+// Configure encryptedFieldsMap with range queries
+const encryptedFieldsMap = {
+  encryptedFields: {
+    fields: [
+      {
+        path: "ssn",
+        bsonType: "string",
+        queries: { queryType: "equality" }
+      },
+      {
+        path: "salary",
+        bsonType: "int",
+        queries: { queryType: "range" }  // NEW in 8.0
+      },
+      {
+        path: "dateOfBirth",
+        bsonType: "date",
+        queries: { queryType: "range" }  // NEW in 8.0
+      }
+    ]
+  }
+};
+
+// Now you can query encrypted fields with range operators
+db.employees.find({
+  salary: { $gte: 50000, $lte: 100000 }  // Works on encrypted data!
+});
+
+db.employees.find({
+  dateOfBirth: { $lt: new Date('1990-01-01') }  // Range on encrypted dates!
+});
+```
+
+**Vector Search in Community Edition:**
+```javascript
+// NEW — Vector search available in Community (was Atlas-only)
+// No longer requires Atlas for basic vector similarity search
+
+// Create vector search index
+db.products.createIndex(
+  { embedding: "vector" },
+  {
+    name: "product_vector_index",
+    vectorOptions: {
+      type: "knnVector",
+      dimensions: 1536,
+      similarity: "cosine"  // or "euclidean", "dotProduct"
+    }
+  }
+);
+
+// Perform vector similarity search
+db.products.aggregate([
+  {
+    $vectorSearch: {
+      index: "product_vector_index",
+      path: "embedding",
+      queryVector: [0.1, 0.2, ...], // 1536 dimensions
+      numCandidates: 100,
+      limit: 10
+    }
+  },
+  {
+    $project: {
+      name: 1,
+      score: { $meta: "vectorSearchScore" }
+    }
+  }
+]);
+```
+
+**OCSF Audit Logs (8.4):**
+```javascript
+// NEW — Open Cybersecurity Schema Framework compliance
+// Standardized audit log format for security tooling
+
+// Enable OCSF-formatted audit logging
+// mongod.conf
+{
+  auditLog: {
+    destination: "file",
+    format: "OCSF",  // NEW — OCSF schema output
+    path: "/var/log/mongodb/audit.json"
+  }
+}
+
+// Audit events now follow OCSF schema
+// Compatible with SIEM tools (Splunk, Elasticsearch Security, etc.)
+```
+
+**Ingress Queue for High-Volume Writes:**
+```javascript
+// NEW — Internal queuing for write-heavy workloads (8.4)
+// Handles bursts of writes without overwhelming the storage engine
+
+// Configure ingress queue
+db.adminCommand({
+  setParameter: 1,
+  ingressQueueEnabled: true,
+  ingressQueueMaxSizeBytes: 1073741824  // 1GB queue
+});
+
+// Benefits:
+// - Smooths out write spikes
+// - Reduces client-side timeouts during bursts
+// - Better tail latency under load
+```
+
+**Shard Key Updates (8.0+):**
+```javascript
+// IMPROVED — Shard key values can now be updated
+// Previously shard keys were immutable after insertion
+
+// Update shard key value (requires retryable write)
+db.orders.updateOne(
+  { _id: orderId },
+  { $set: { customerId: newCustomerId } },  // customerId is shard key
+  { retryWrites: true }  // Required for shard key update
+);
+
+// Note: Frequent shard key updates can cause chunk migrations
+// Design to minimize shard key changes
+```
+
+### MongoDB 8.x Driver Updates
+
+**Node.js Driver 6.x:**
+```typescript
+// Modern MongoDB Node.js driver patterns
+
+import { MongoClient, ServerApiVersion } from 'mongodb';
+
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+  // New connection options
+  maxPoolSize: 50,
+  minPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  // NEW — Better connection handling
+  loadBalanced: false,  // Set true for load-balanced deployments
+  directConnection: false,  // Set true for direct replica set member
+});
+
+// Improved type safety with TypeScript
+interface User {
+  _id: ObjectId;
+  email: string;
+  name: string;
+}
+
+const users = client.db('mydb').collection<User>('users');
+
+// Type-safe operations
+const user = await users.findOne({ email: 'test@example.com' });
+// user is User | null with proper typing
+```
 
 ---
 
