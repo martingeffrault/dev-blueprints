@@ -348,7 +348,37 @@ useEffect(() => {
 | 19.1.2 | Jun 2025 | Security patches |
 | 19.2 | Oct 2025 | `<Activity />`, `useEffectEvent`, `cacheSignal`, Performance Tracks |
 | 19.2.1+ | Dec 2025 | Additional security fixes |
-| Compiler 1.0 | 2025 | Stable automatic memoization, 20-30% render time reduction |
+| Compiler 1.0 | Dec 2025 | Stable automatic memoization, up to 40% fewer re-renders |
+
+### React Compiler 1.0 Highlights
+
+**Installation:**
+```bash
+npm install -D babel-plugin-react-compiler
+npm install react-compiler-runtime  # For React 17/18 compatibility
+```
+
+**Babel Configuration:**
+```js
+// babel.config.js
+module.exports = {
+  plugins: [
+    ['babel-plugin-react-compiler', {
+      target: '19' // or '17', '18' for older React
+    }]
+  ]
+};
+```
+
+**Production Metrics (Early Adopters):**
+- Wakelet: 10% LCP improvement, 15% INP improvement
+- Instagram: 25-40% fewer re-renders in complex components
+- 30% faster interactions for pure React elements (Radix, etc.)
+
+**When You Still Need Manual Memoization:**
+- External library APIs requiring stable references
+- Interop with class components
+- Imperative animation handles with `useImperativeHandle`
 
 ### React 19.2 Highlights
 
