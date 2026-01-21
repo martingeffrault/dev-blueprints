@@ -396,6 +396,118 @@ queryClient.setQueryData(['users', userId], (old) => ({
 | `keepPreviousData` | `placeholderData: keepPreviousData` |
 | `useQuery(key, fn, options)` | `useQuery({ queryKey, queryFn, ...options })` |
 | `useMutation(fn, options)` | `useMutation({ mutationFn, ...options })` |
+| `onSuccess/onError` in useQuery | **Removed** — use useEffect or mutation callbacks |
+
+### Callbacks Removed from useQuery
+
+```typescript
+// ❌ v4 — onSuccess/onError in useQuery (REMOVED in v5)
+useQuery({
+  queryKey: ['user'],
+  queryFn: fetchUser,
+  onSuccess: (data) => console.log(data), // ❌ Removed
+  onError: (error) => toast.error(error), // ❌ Removed
+});
+
+// ✅ v5 — Use useEffect for side effects
+const { data, error } = useQuery({
+  queryKey: ['user'],
+  queryFn: fetchUser,
+});
+
+useEffect(() => {
+  if (data) console.log(data);
+}, [data]);
+
+useEffect(() => {
+  if (error) toast.error(error.message);
+}, [error]);
+
+// Note: onSuccess/onError/onSettled STILL work in useMutation
+```
+
+### Simplified Optimistic Updates (v5)
+
+```typescript
+// ✅ v5 — Simpler optimistic updates using variables
+function useToggleTodo() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: toggleTodo,
+    // Access variables directly in component
+  });
+}
+
+function TodoItem({ todo }) {
+  const { mutate, variables, isPending } = useToggleTodo();
+
+  // Show optimistic state without manual cache manipulation
+  const isOptimisticDone = isPending && variables?.id === todo.id
+    ? !todo.done
+    : todo.done;
+
+  return (
+    <li style={{ opacity: isPending ? 0.5 : 1 }}>
+      <input
+        type="checkbox"
+        checked={isOptimisticDone}
+        onChange={() => mutate({ id: todo.id })}
+      />
+      {todo.title}
+    </li>
+  );
+}
+```
+
+### initialPageParam Required (v5)
+
+```typescript
+// ❌ v4 — pageParam could be undefined
+useInfiniteQuery({
+  queryKey: ['posts'],
+  queryFn: ({ pageParam }) => fetchPosts(pageParam), // pageParam might be undefined
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
+});
+
+// ✅ v5 — initialPageParam required
+useInfiniteQuery({
+  queryKey: ['posts'],
+  queryFn: ({ pageParam }) => fetchPosts(pageParam),
+  initialPageParam: 0, // Required! Type-safe pageParam
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
+});
+```
+
+### maxPages for Infinite Queries (v5)
+
+```typescript
+// ✅ NEW in v5 — Limit stored pages
+useInfiniteQuery({
+  queryKey: ['posts'],
+  queryFn: fetchPosts,
+  initialPageParam: 0,
+  getNextPageParam: (lastPage) => lastPage.nextCursor,
+  maxPages: 3, // Only keep last 3 pages in cache
+});
+```
+
+### Global Error Type (v5)
+
+```typescript
+// types/react-query.d.ts
+import '@tanstack/react-query';
+
+declare module '@tanstack/react-query' {
+  interface Register {
+    defaultError: Error; // Or your custom error type
+  }
+}
+
+// Now all queries have typed errors without generics
+const { error } = useQuery({ queryKey: ['user'], queryFn: fetchUser });
+// error is typed as Error (your registered type)
+```
 
 ---
 

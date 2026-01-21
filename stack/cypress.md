@@ -1,7 +1,7 @@
 # Cypress (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Cypress 13+
+> **Versions covered**: Cypress 14+, 15
 > **Purpose**: E2E and component testing with real browser execution
 
 ---
@@ -419,7 +419,7 @@ describe('Checkout Flow', () => {
 
 ```dockerfile
 # Dockerfile.cypress
-FROM cypress/included:13.6.0
+FROM cypress/included:14
 
 WORKDIR /app
 
@@ -450,7 +450,7 @@ services:
       retries: 30
 
   cypress:
-    image: cypress/included:13.6.0
+    image: cypress/included:14
     depends_on:
       app:
         condition: service_healthy
@@ -670,10 +670,73 @@ it('should edit user', () => { /* ... */ });
 
 ---
 
+## 2025 Changelog
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| 13.x | 2024 | Stable baseline |
+| **14.0** | **Jan 2025** | **JIT default**, Node 20+, React 18+, Angular 17+, Vue 2 removed |
+| 14.x | 2025 | Angular 21, zoneless CT support |
+| **15.0** | **2025** | Further breaking changes (see GitHub) |
+
+### Cypress 14 Breaking Changes
+
+**Platform Requirements:**
+- Node.js 16 and 21 **removed** — use 18, 20, or 22+
+- Bundled Node.js upgraded to **20.18.1**
+- Linux requires glibc ≥2.28 (Ubuntu 20+, RHEL 8+)
+
+**Framework Support Removed:**
+```typescript
+// ❌ REMOVED — No longer bundled
+- Vue 2 → Use @cypress/vue2 package instead
+- Svelte 3/4 → Use @cypress/svelte@2.x instead
+- React ≤17 → React 18+ required
+- Next.js ≤13 → Next.js 14+ required
+- Angular <17.2.0 → Angular 17.2+ required
+```
+
+**New Framework Support:**
+```typescript
+// ✅ ADDED in Cypress 14+
+- React 19
+- Angular 19, 21 (with zoneless support)
+- Next.js 15
+- Svelte 5
+- Vite 6
+```
+
+**JIT Compilation Default:**
+```typescript
+// cypress.config.ts
+export default defineConfig({
+  component: {
+    // JIT compilation now DEFAULT (was experimental)
+    // Only compiles resources related to current spec
+    // Note: No benefit with Vite (already fast)
+    justInTimeCompile: true, // Now default, deprecated option
+  },
+});
+```
+
+**Angular Zoneless Support (Cypress 14.3+):**
+```typescript
+// Angular 21+ zoneless component testing
+import { mount } from 'cypress/angular-zoneless';
+
+cy.mount(MyComponent);
+```
+
+**Chrome 137+ Warning:**
+Chrome 137+ no longer supports `--load-extension` in branded Chrome. Use Electron, Chrome for Testing, or Chromium for `@cypress/puppeteer`.
+
+---
+
 ## Resources
 
 - [Cypress Documentation](https://docs.cypress.io/)
 - [Cypress Best Practices](https://docs.cypress.io/guides/references/best-practices)
 - [Real World App](https://github.com/cypress-io/cypress-realworld-app)
 - [Cypress Component Testing](https://docs.cypress.io/guides/component-testing/overview)
-- [Docker + Cypress Setup](https://dev.to/cypress/docker-cypress-in-2025-how-ive-perfected-my-e2e-testing-setup-4f7j)
+- [Cypress 14 Release Blog](https://www.cypress.io/blog/cypress-14-is-here-see-whats-new)
+- [v14 Migration Guide](https://docs.cypress.io/app/references/migration-guide)
