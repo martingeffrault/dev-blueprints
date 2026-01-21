@@ -1,8 +1,8 @@
 # Next.js 15+ (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 15.0 - 15.5, preview of 16.x
-> **Bundler**: Turbopack (stable in 15.5+, default in 16)
+> **Versions covered**: 15.0 - 15.5, 16.x
+> **Bundler**: Turbopack (stable, default since 16.0)
 
 ---
 
@@ -427,10 +427,37 @@ function ProductList({ initialProducts }) {
 | 16.0 | Nov 2025 | **Turbopack default bundler**, Cache Components replace PPR flag |
 | 16.1 | Dec 2025 | Refinements, File System caching stable |
 
-### Next.js 16 Cache Components (PPR Evolution)
+### Next.js 16 Key Features
 
-Cache Components is the new model for combining static shells with dynamic content:
+**Turbopack Default Bundler:**
+```bash
+# No longer need --turbopack flag
+next dev   # Uses Turbopack by default
+next build # Uses Turbopack by default
+```
 
+**Async Request APIs (Breaking):**
+```tsx
+// ❌ REMOVED — Synchronous access no longer works in 16.0
+const { params } = props; // Sync access removed
+
+// ✅ REQUIRED — All request APIs must be awaited
+const params = await props.params;
+const searchParams = await props.searchParams;
+const cookies = await cookies();
+const headers = await headers();
+```
+
+**proxy.ts Replaces Middleware for Network Boundary:**
+```typescript
+// app/proxy.ts (NEW — clearer network boundary)
+export function proxy(request: Request) {
+  // Handle proxying, rewrites, redirects
+  // Clarifies what runs at the edge vs origin
+}
+```
+
+**Cache Components (`use cache`):**
 ```tsx
 // next.config.ts
 export default {
@@ -453,10 +480,16 @@ async function BlogPost({ params }) {
 }
 ```
 
-**Key Changes from PPR:**
-- `experimental.ppr` flag removed in favor of `use cache`
-- More granular cache control with `cacheLife` profiles
-- Turbopack now default for all new projects (50%+ adoption in 15.3+)
+**Next.js Devtools MCP:**
+```bash
+# Model Context Protocol integration for AI-assisted debugging
+# Works with Claude, GitHub Copilot, and other AI tools
+```
+
+**Security CVEs (Upgrade Immediately):**
+- CVE-2025-55184 (High): Denial of Service in RSC
+- CVE-2025-55183 (Medium): Source Code Exposure in RSC
+- All 13.x, 14.x, 15.x, 16.x users should upgrade to patched versions
 
 ### Key 15.5 Features
 

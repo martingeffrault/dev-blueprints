@@ -346,9 +346,9 @@ useEffect(() => {
 | 19.0.1 | Jan 2025 | **Security fix** for RSC RCE vulnerability |
 | 19.1 | Mar 2025 | Owner Stack debugging, refinements |
 | 19.1.2 | Jun 2025 | Security patches |
-| 19.2 | Oct 2025 | `<Activity />`, `useEffectEvent`, `cacheSignal`, Performance Tracks |
-| 19.2.1+ | Dec 2025 | Additional security fixes |
-| Compiler 1.0 | Dec 2025 | Stable automatic memoization, up to 40% fewer re-renders |
+| 19.2 | Oct 2025 | `<Activity />`, `useEffectEvent`, `cacheSignal`, Partial Pre-rendering |
+| 19.2.1+ | Dec 2025 | Additional security fixes, CVE-2025-55184 (DoS), CVE-2025-55183 (Source Code Exposure) |
+| Compiler 1.0 | Dec 2025 | Stable automatic memoization, ESLint rules, up to 40% fewer re-renders |
 
 ### React Compiler 1.0 Highlights
 
@@ -382,6 +382,22 @@ module.exports = {
 
 ### React 19.2 Highlights
 
+**Partial Pre-rendering (PPR)** — Pre-render static parts, resume with dynamic:
+```tsx
+// Static shell served from CDN instantly
+// Dynamic content streams in after
+async function ProductPage({ params }) {
+  return (
+    <div>
+      <Header /> {/* Static, pre-rendered */}
+      <Suspense fallback={<Skeleton />}>
+        <ProductDetails id={params.id} /> {/* Streams in dynamically */}
+      </Suspense>
+    </div>
+  );
+}
+```
+
 **`<Activity />`** — Pre-render hidden UI without impacting performance:
 ```tsx
 <Activity mode="hidden">
@@ -401,6 +417,21 @@ function Chat({ roomId }) {
     return () => conn.disconnect();
   }, [roomId]); // Only roomId triggers reconnect
 }
+```
+
+**eslint-plugin-react-hooks Updates:**
+```bash
+# New: React Compiler powered rules
+npm install eslint-plugin-react-hooks@latest
+```
+```js
+// eslint.config.js (flat config default in 19.2)
+import reactHooks from 'eslint-plugin-react-hooks';
+
+export default [
+  reactHooks.configs.recommended,
+  // Opt-in to new Compiler-powered rules
+];
 ```
 
 ---

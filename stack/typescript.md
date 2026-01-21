@@ -1,8 +1,8 @@
 # TypeScript 5.x (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 5.5, 5.6, 5.7, 5.8+
-> **Key feature**: Native Node.js support (22.6+)
+> **Versions covered**: 5.5, 5.6, 5.7, 5.8, 5.9, 6.x (bridge), 7.x (Go port)
+> **Key feature**: Native Node.js support, 10x faster builds with Go port
 
 ---
 
@@ -316,10 +316,12 @@ if (value == null) { } // Actually fine for null/undefined specifically
 |---------|------|-------------|
 | 5.5 | Jun 2024 | Inferred type predicates, isolated declarations |
 | 5.6 | Sep 2024 | Disallowed nullish/truthy checks improvements |
-| 5.7 | Nov 2024 | `--rewriteRelativeImportExtensions`, ES2024 target, faster startup |
-| 5.8 | Mar 2025 | `--erasableSyntaxOnly` for Node.js direct execution, `require()` ESM support |
-| - | Jul 2025 | Node.js 22.18+ native TypeScript support unflagged |
-| - | 2025 | TypeScript compiler rewrite in Go announced (10x performance) |
+| 5.7 | Nov 2024 | `--rewriteRelativeImportExtensions`, ES2024 target, Node.js compile cache (2.5x faster) |
+| 5.8 | Feb 2025 | `--erasableSyntaxOnly` for Node.js direct execution, `require()` ESM support |
+| 5.9 | Aug 2025 | Improved return type checks, path normalization performance |
+| **6.0** | **Oct 2025** | **Bridge release** — Deprecates features for 7.0 compatibility |
+| **7.0** | **Dec 2025** | **Go port** — 10x faster builds, parallel compilation |
+| - | Jul 2025 | Node.js 22.18+ native TypeScript support unflagged (Node.js 23.6 stable) |
 
 ### TypeScript 5.5 Highlights (Blockbuster Release)
 
@@ -367,7 +369,71 @@ node --experimental-strip-types app.ts
 ```
 Errors on `enum` and `namespace` that can't be stripped.
 
-**Better Monorepo Support**: Improved tsconfig.json resolution.
+**Return Type Checks in Conditionals:**
+```typescript
+// TypeScript 5.8 catches return type mismatches in ternaries
+function getValue(flag: boolean): string {
+  return flag ? "yes" : 42; // Error: 42 not assignable to string
+}
+```
+
+**Better Monorepo Support**: Improved tsconfig.json resolution in parent directories.
+
+### TypeScript 6.0 (Bridge Release)
+
+TypeScript 6.0 is a **transitional release** between 5.x and the Go-based 7.0:
+
+```typescript
+// 6.0 deprecates features that won't exist in 7.0
+// Helps teams prepare for migration
+
+// Deprecation warnings for:
+// - Some legacy module resolution behaviors
+// - Certain tsconfig options that won't be supported in Go port
+```
+
+**Key Points:**
+- High compatibility with 5.x for easy upgrade
+- Deprecates features to align with 7.0
+- No breaking changes, just warnings
+
+### TypeScript 7.0 (Go Port — Project Corsa)
+
+The TypeScript compiler has been **completely rewritten in Go** for version 7:
+
+```bash
+# TypeScript 7 performance
+# Full builds: ~10x faster than 5.x
+# Incremental builds: Near-instantaneous for small changes
+# Parallel project builds: Multiple projects compile simultaneously
+```
+
+**Key Improvements:**
+```typescript
+// Raw performance gains
+// - Multi-threaded compilation
+// - Better memory efficiency
+// - Parallel project graph resolution
+// - Faster --incremental mode
+
+// Real-world results:
+// - Large monorepos see 10x+ speedup
+// - Small changes feel instant
+// - CI/CD pipelines dramatically faster
+```
+
+**Migration Notes:**
+```bash
+# TypeScript 7 aims for behavioral compatibility with 6.0
+# Type-checking should produce identical results
+# Some edge cases may differ — test thoroughly
+```
+
+**What's NOT Changing:**
+- TypeScript syntax remains the same
+- tsconfig.json format unchanged
+- .d.ts generation compatible
+- All existing tooling continues to work
 
 ---
 

@@ -438,6 +438,34 @@ const user = await prisma.user.findUnique({
 - Implicit M2M relation tables now use **primary key** instead of unique index
 - Affects replica identity behavior
 
+### Prisma 6.18+ Configuration
+
+**prisma.config.ts (New):**
+```typescript
+// prisma.config.ts — New config file format
+import { defineConfig } from '@prisma/config';
+
+export default defineConfig({
+  // Fields previously in schema.prisma now available here
+  earlyAccess: ['driverAdapters'],
+  // Future-proofing for Prisma 7
+});
+```
+
+**Driver Adapters Required (v6+):**
+```typescript
+// Rust engine removed — must install driver adapter manually
+// For PostgreSQL:
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+
+const prisma = new PrismaClient({ adapter });
+```
+
 ### Prisma 7 Architecture
 
 - **No Rust binaries** — Pure TypeScript/WASM
@@ -445,6 +473,7 @@ const user = await prisma.user.findUnique({
 - **Query speed**: Up to 3.4x faster
 - **Deployment**: No native dependencies to manage
 - **Edge support**: Better serverless compatibility
+- **Driver adapters**: Required for all databases
 
 ---
 

@@ -601,13 +601,125 @@ export const load = async () => {
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 2.0 | Dec 2023 | Svelte 5 support prep |
-| 2.x | 2024-2025 | Svelte 5 runes, shallow routing |
-| 2025 | Ongoing | Remote Functions, async components |
+| 2.22.0 | Jul 2025 | Vite 7 & Rolldown support |
+| 2.43.0 | Oct 2025 | Experimental async SSR |
+| 2.49.0 | Dec 2025 | File upload streaming in Remote Functions |
+| Svelte 5.39+ | Oct 2025 | Async SSR experimental support |
+| Svelte 5.40+ | Nov 2025 | createContext API |
+| Svelte 5.41+ | Nov 2025 | $state.eager rune |
+| Svelte 5.42+ | Dec 2025 | fork API for offscreen state |
 
-### SvelteKit 2025 Features
+### SvelteKit 2025 Key Features
+
+**Remote Functions (Type-Safe Server Calls):**
+```typescript
+// src/lib/server/users.ts
+import { db } from './db';
+
+export async function getUser(id: string) {
+  // Runs on server, called from client with full type safety
+  return db.user.findUnique({ where: { id } });
+}
+
+export async function updateUser(id: string, data: UserUpdateInput) {
+  // Best for authenticated, internal operations
+  // Keep REST endpoints for public APIs and webhooks
+  return db.user.update({ where: { id }, data });
+}
+```
+
+**Async Components (Svelte 5.39+):**
+```svelte
+<!-- No more load functions for simple data! -->
+<script lang="ts">
+  // Direct await in component script
+  const user = await fetchUser(userId);
+  const posts = await fetchPosts(user.id);
+
+  // Compiles away complexity — no Suspense wrapper needed
+</script>
+
+<h1>{user.name}</h1>
+{#each posts as post}
+  <article>{post.title}</article>
+{/each}
+```
+
+**Experimental Async SSR (SvelteKit 2.43+):**
+```javascript
+// svelte.config.js
+export default {
+  kit: {
+    experimental: {
+      async: true  // Enable async SSR
+    }
+  }
+};
+```
+```svelte
+<!-- With async SSR, await works anywhere without boundaries -->
+<script>
+  const data = await fetch('/api/data').then(r => r.json());
+</script>
+```
+
+**Svelte MCP Server (November 2025):**
+```bash
+# Official Model Context Protocol server for AI assistants
+# Provides docs, static analysis, and code suggestions
+# Works with Claude, Copilot, and other AI tools
+
+# npm package: @sveltejs/mcp-server
+# Docs: svelte.dev/mcp
+```
+
+**New Runes (Svelte 5.40+):**
+```svelte
+<script>
+  import { createContext } from 'svelte';
+
+  // createContext — typed context without getContext boilerplate (5.40)
+  const userContext = createContext<User>('user');
+
+  // $state.eager — immediate UI updates, don't wait for await (5.41)
+  let data = $state.eager(initialValue);
+  data = await fetchNewData(); // UI updates immediately, not after await
+
+  // fork API — change state 'offscreen' to discover async work (5.42)
+  const result = fork(() => {
+    someState = newValue; // Doesn't commit to screen
+    // Discover what async work would result
+  });
+</script>
+```
+
+**File Upload Streaming (SvelteKit 2.49+):**
+```typescript
+// Form data can be accessed before large files finish uploading
+export const actions = {
+  upload: async ({ request }) => {
+    const formData = await request.formData();
+    // Access metadata while file is still streaming
+    const name = formData.get('name');
+
+    // Stream the file
+    const file = formData.get('file') as File;
+    const stream = file.stream();
+    // Process as it uploads
+  }
+};
+```
+
+**Vite 7 & Rolldown Support (SvelteKit 2.22+):**
+```javascript
+// Faster compilation with Rolldown bundler
+// Note: Larger bundle sizes until Rolldown tree-shaking matures
+// Vite 7 with Rolldown is opt-in for now
+```
+
+### Legacy Features
 
 - **Remote Functions**: Type-safe server calls without tRPC
-- **Async Components**: Direct await in component scripts
 - **OpenTelemetry**: Built-in observability via `instrumentation.server.ts`
 - **Service Workers**: Built-in offline support
 - **15-30% smaller bundles**: Better tree-shaking with Svelte 5
