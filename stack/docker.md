@@ -199,7 +199,8 @@ tmp/
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
+# Note: 'version:' field is now obsolete in modern Docker Compose
+# Start directly with services:
 
 services:
   app:
@@ -257,7 +258,7 @@ volumes:
 
 ```yaml
 # docker-compose.prod.yml
-version: '3.8'
+# 'version:' field obsolete in 2025 — start directly with services
 
 services:
   app:
@@ -484,6 +485,38 @@ COPY . .
 | Compose v2 | 2023+ | `docker compose` (no hyphen) |
 | Wasm support | 2024+ | WebAssembly containers |
 | Docker Desktop 4.x | 2024-2025 | Improved performance |
+| `version:` obsolete | 2024+ | Compose files start with `services:` directly |
+| containerd runtime | 2025 | Same runtime as Kubernetes |
+| Serverless containers | 2025 | AWS Fargate, Cloud Run, Azure Container Apps |
+| MicroVM sandboxes | 2025+ | Firecracker, Kata Containers for untrusted workloads |
+
+### 2025 Paradigm Shift
+
+Docker has evolved from a developer experiment tool to a **production-grade platform**. Key shifts:
+
+**1. Compose v2 Syntax:**
+```yaml
+# ❌ OLD — version field
+version: '3.8'
+services:
+  app:
+
+# ✅ NEW — no version field needed
+services:
+  app:
+```
+
+**2. containerd Runtime:**
+Docker now uses containerd under the hood — the same runtime Kubernetes uses. This makes containers more standardized and portable.
+
+**3. Serverless Containers:**
+Technologies like AWS Fargate, Google Cloud Run, and Azure Container Apps run containers without managing servers. The infrastructure layer is abstracted away.
+
+**4. MicroVM Sandboxes:**
+For untrusted workloads, lightweight "microVM" sandboxes (AWS Firecracker, Kata Containers) combine VM-level isolation with container speed.
+
+**5. Immutable Infrastructure:**
+Treat images as immutable — rebuild rather than modify. Never patch running containers.
 
 ---
 

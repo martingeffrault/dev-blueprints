@@ -440,17 +440,84 @@ COMMIT;  -- Immediately
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 16 | 2023 | JSON_ARRAY, JSON_OBJECT, parallel FULL joins |
-| 17 | Sept 2024 | B-tree optimization, failover slots, incremental sort |
-| 17.x | 2025 | Stability improvements |
-| 18 | 2025 | Coming: More performance improvements |
+| **17** | **Sept 2024** | **Incremental backups**, JSON_TABLE, vacuum 20x less memory |
+| 17.7 | Nov 2025 | Stability improvements |
+| **18** | **2025** | Released — further performance improvements |
 
 ### PostgreSQL 17 Highlights
 
-- **B-tree IN optimization**: Multiple values searched in single scan
-- **Correlated subquery optimization**: IN subqueries → JOINs
-- **Incremental sort**: Better memory usage for large datasets
-- **Failover slots**: Seamless logical replication failover
-- **Memory optimization**: Less memory for logical decoding
+**Incremental Backups (Major Feature):**
+```bash
+# Traditional base backup — full copy every time
+pg_basebackup -D /backup/base
+
+# NEW: Incremental backup — only changes since last backup
+pg_basebackup -D /backup/incr --incremental=/backup/base/backup_manifest
+```
+- Faster recovery by applying only recent changes
+- Allows restore to specific points using multiple increments
+
+**Vacuum Memory Optimization:**
+- New internal memory structure consumes up to **20x less memory**
+- Critical for large databases with heavy writes
+
+**JSON_TABLE Function:**
+```sql
+-- Convert JSON to table rows (SQL/JSON standard)
+SELECT * FROM JSON_TABLE(
+    '[{"name": "Alice", "age": 30}, {"name": "Bob", "age": 25}]',
+    '$[*]'
+    COLUMNS (
+        name TEXT PATH '$.name',
+        age INT PATH '$.age'
+    )
+) AS jt;
+```
+
+**Additional JSON Functions:**
+```sql
+-- Check if key/value exists
+SELECT JSON_EXISTS('{"a": 1}', '$.a');  -- true
+
+-- Extract JSON fragments
+SELECT JSON_QUERY('{"items": [1,2,3]}', '$.items');  -- [1,2,3]
+
+-- Extract single value
+SELECT JSON_VALUE('{"name": "Alice"}', '$.name');  -- 'Alice'
+```
+
+**COPY Performance:**
+- Up to **2x faster** when exporting large rows
+
+**MERGE Enhancements:**
+```sql
+-- MERGE now supports RETURNING clause
+MERGE INTO target t
+USING source s ON t.id = s.id
+WHEN MATCHED THEN UPDATE SET value = s.value
+WHEN NOT MATCHED THEN INSERT (id, value) VALUES (s.id, s.value)
+RETURNING *;  -- NEW in PG17
+```
+
+**Logical Replication:**
+- `pg_upgrade` now preserves logical replication slots on publishers
+- Failover of logical slots is now supported
+
+**Partitioned Table Improvements:**
+- Identity columns now supported on partitioned tables
+- Exclusion constraints now work on partitioned tables
+
+**CTE and UNION Optimization:**
+- Optimizer can now leverage statistics from earlier parts of CTEs
+- Better query plans for complex UNION queries
+
+### PostgreSQL 18 (2025)
+
+PostgreSQL 18 was released in 2025 with:
+- Further performance improvements
+- Enhanced streaming I/O for sequential reads
+- Improved write throughput under high concurrency
+- WAL processing improvements (2x concurrent transaction handling)
 
 ---
 
