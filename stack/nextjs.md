@@ -424,8 +424,39 @@ function ProductList({ initialProducts }) {
 | 15.3 | Apr 2025 | Turbopack adoption surge (50%+ dev sessions) |
 | 15.4 | Jun 2025 | Performance improvements, better error messages |
 | 15.5 | Aug 2025 | **Turbopack builds beta**, Node.js middleware stable, TypeScript config improvements |
-| 16.0 | Nov 2025 | Turbopack default, Cache Components replace PPR experimental flag |
+| 16.0 | Nov 2025 | **Turbopack default bundler**, Cache Components replace PPR flag |
 | 16.1 | Dec 2025 | Refinements, File System caching stable |
+
+### Next.js 16 Cache Components (PPR Evolution)
+
+Cache Components is the new model for combining static shells with dynamic content:
+
+```tsx
+// next.config.ts
+export default {
+  experimental: {
+    cacheLife: {
+      blog: { stale: 3600, revalidate: 900, expire: 86400 },
+    },
+  },
+};
+
+// app/posts/[slug]/page.tsx
+import { cacheLife } from 'next/cache';
+
+async function BlogPost({ params }) {
+  'use cache';
+  cacheLife('blog');
+
+  const post = await db.posts.findUnique({ where: { slug: params.slug } });
+  return <article>{post.content}</article>;
+}
+```
+
+**Key Changes from PPR:**
+- `experimental.ppr` flag removed in favor of `use cache`
+- More granular cache control with `cacheLife` profiles
+- Turbopack now default for all new projects (50%+ adoption in 15.3+)
 
 ### Key 15.5 Features
 
