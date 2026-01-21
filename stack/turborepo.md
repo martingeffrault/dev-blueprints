@@ -707,7 +707,7 @@ turbo build
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | Jun 2024 | New terminal UI (TUI), strict env mode default, breaking changes cleanup |
+| 2.0 | Jun 2024 | New terminal UI (TUI), strict env mode default, Rust rewrite complete |
 | 2.1 | Aug 2024 | Affected package detection (`--affected`), UI polish, repository exploration |
 | 2.2 | Oct 2024 | Performance improvements, better error messages |
 | 2.3 | Nov 2024 | Extended package configurations, improved caching |
@@ -715,6 +715,22 @@ turbo build
 | 2.5 | Jan 2025 | Better Bun support, performance optimizations |
 | 2.6 | Feb 2025 | Bun lockfile v1 support, Yarn catalogs compatibility |
 | 2.7 | Mar 2025 | **Devtools** (`turbo devtools`), extended `extends` key, Biome integration |
+| 2.7.5 | Jan 2026 | `errorsOnlyShowHash` flag, new docs subcommand, OOM-killed task handling |
+
+### Rust Rewrite (Complete)
+
+Turborepo 2.0 completed a full rewrite from Go to Rust, providing:
+- Significant performance improvements
+- Better memory management
+- Resolved many edge case bugs from the Go implementation
+- Foundation for future optimizations
+
+### Firebase App Hosting Support (January 2026)
+
+Firebase App Hosting now officially supports Turborepo alongside Nx:
+- Optimized builds for Next.js apps in monorepos
+- Task scheduling and parallelization for faster deployments
+- Seamless integration with Firebase deployment pipeline
 
 ### Key 2.0 Breaking Changes
 

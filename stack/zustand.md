@@ -383,8 +383,50 @@ const useUIStore = create({ ... });
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 4.5 | 2024 | persist middleware behavior change, deprecation warnings |
-| **5.0** | **Nov 2024** | **React 18+ required**, TypeScript 5+, dropped use-sync-external-store |
-| 5.0.8 | 2025 | Bug fixes, stability |
+| **5.0** | **Nov 2024** | **React 18+ required**, TypeScript 5+, native useSyncExternalStore |
+| 5.0.10 | Jan 2026 | Latest stable, bug fixes, stability |
+
+### Zustand v5 Key Changes
+
+**1. Native useSyncExternalStore Integration:**
+Zustand V5 relies on React's native `useSyncExternalStore`, making state consistent across concurrent rendering environments. No polyfill needed (React 18+).
+
+**2. New Shallow Comparison Pattern:**
+```typescript
+// v4 — create() accepted shallow as second argument
+import { create } from 'zustand';
+const useStore = create(fn, { equalityFn: shallow }); // ❌ No longer works
+
+// v5 — use useShallow hook for shallow comparisons
+import { useShallow } from 'zustand/shallow';
+const { a, b } = useStore(useShallow((state) => ({ a: state.a, b: state.b })));
+
+// v5 — or use createWithEqualityFn for v4-like behavior
+import { createWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
+const useStore = createWithEqualityFn(fn, shallow); // ✅
+```
+
+**3. Persist Middleware Change:**
+```typescript
+// v5 no longer persists initial state during store creation
+// State is only persisted after first setState call
+const useStore = create(
+  persist(
+    (set) => ({ count: 0 }),
+    { name: 'counter' }
+  )
+);
+// To persist initial state, call setState after creation:
+useStore.setState(useStore.getState());
+```
+
+### Zustand in Modern Stacks (2025-2026)
+
+- **Zustand + TanStack Query**: Most popular combo — Zustand for client state, TanStack Query for server state
+- **Web3 & Gaming**: Widely used in dApps and gaming dashboards for real-time state
+- **Next.js App Router**: Works in Client Components only (not Server Components)
+- **TypeScript 5+**: Full type inference with proper currying syntax
 
 ### Zustand v5 Breaking Changes
 

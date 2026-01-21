@@ -582,6 +582,7 @@ pnpm store prune
 | 10.0 | Jan 2025 | **Security by default** - lifecycle scripts blocked |
 | 10.7 | Apr 2025 | `allowUnusedPatches` setting added |
 | 10.26 | Dec 2025 | `allowBuilds` setting, `blockExoticSubdeps` |
+| 10.28 | Jan 2026 | Latest stable, bug fixes |
 
 ### Major v10 Breaking Changes
 
@@ -589,6 +590,60 @@ pnpm store prune
 2. **Git dependencies** - `prepare` scripts blocked unless explicitly allowed
 3. **Explicit permissions** - Use `onlyBuiltDependencies` or `allowBuilds`
 4. **Config dependencies** - New way to share pnpm config across projects
+5. **manage-package-manager-versions enabled by default** - pnpm manages its own version
+6. **public-hoist-pattern empty by default** - Nothing hoisted (not even eslint/prettier)
+7. **Node.js 18/19 support dropped** - pnpm CLI ships with specific Node.js version
+
+### New Features in v10 (2025)
+
+**JSR Registry Support:**
+```json
+// package.json - Install from JSR using jsr: protocol
+{
+  "dependencies": {
+    "@std/path": "jsr:@std/path@^1.0.0"
+  }
+}
+```
+
+**Runtime Management (Deno/Bun):**
+```json
+// package.json - Specify runtime, pnpm auto-downloads it
+{
+  "devEngines": {
+    "runtime": {
+      "name": "bun",
+      "version": ">=1.1.0"
+    }
+  }
+}
+```
+
+**Minimum Release Age (Supply Chain Protection):**
+```yaml
+# pnpm-workspace.yaml - Block "zero-day" packages
+minimumReleaseAge: 24h  # Packages must be 24 hours old
+```
+
+**Config Dependencies (Monorepo Config Sharing):**
+```yaml
+# pnpm-workspace.yaml
+configDependencies:
+  - "@myorg/pnpm-config"  # Installed to node_modules/.pnpm-config
+```
+
+### Disk Savings (2026 Benchmarks)
+
+| Scenario | npm | pnpm | Savings |
+|----------|-----|------|---------|
+| 10 React 19 projects | 4.87 GB | 612 MB | **87%** |
+| Average monorepo | 2.1 GB | 450 MB | **78%** |
+
+### pnpm v11 Preview
+
+Work has started on pnpm v11.0:
+- Noticeable performance improvements
+- Global virtual store not yet default (planned for future)
 
 ### Notable npm Supply Chain Attacks (2025)
 

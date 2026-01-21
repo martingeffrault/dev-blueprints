@@ -361,7 +361,15 @@ npx @tailwindcss/upgrade
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 4.0 | Jan 2025 | Complete rewrite, CSS-first config, Oxide engine, 5x faster |
-| 4.0.x | 2025 | Bug fixes, stability improvements |
+| 4.1 | Mar 2025 | Native `@starting-style` support, improved animations, bug fixes |
+| 4.x | 2025 | Ongoing improvements, Tailwind Plus ecosystem updates |
+
+### Tailwind Plus (2025)
+
+Tailwind UI has been rebranded to **Tailwind Plus** with expanded features:
+- All examples updated to support Tailwind CSS v4.0 with version picker (v4.0/v3.4)
+- v4.0 snippets leverage new features for simplified code
+- New component patterns taking advantage of CSS-first configuration
 
 ### v4.0 Key Features
 
