@@ -843,20 +843,94 @@ const function = new lambda.Function(this, 'Function', {
 
 ---
 
-## 2025-2026 Updates
+## 2025-2026 Changelog (re:Invent 2025)
 
 | Feature | Date | Description |
 |---------|------|-------------|
-| Lambda Managed Instances | 2025 | Run Lambda on EC2 with serverless simplicity |
+| **Lambda Durable Functions** | Dec 2025 | Coordinate multi-step workflows over seconds to 1 year |
+| **Lambda Managed Instances** | Dec 2025 | Run Lambda on EC2 with serverless simplicity |
+| **Lambda Tenant Isolation** | Dec 2025 | Separate execution environments per tenant |
+| Lambda INIT Phase Billing | Aug 2025 | INIT phase now billed for all configurations |
+| **S3 Vectors GA** | Dec 2025 | Native vector storage, 2B vectors/index, 90% cost reduction |
+| **S3 50TB Object Limit** | Dec 2025 | 10x increase from 5TB max object size |
+| **ECS Express Mode** | Dec 2025 | Single-command container deployment |
+| **Graviton5 Processors** | Dec 2025 | 25% faster than Graviton4, 192 cores/chip |
+| **Database Savings Plans** | Dec 2025 | Up to 35% savings across 7 database services |
 | CDK Refactor | Sep 2025 | Reorganize CDK code while preserving resources |
 | CDK Booster | Sep 2025 | Faster TypeScript/JS Lambda bundling |
 | DynamoDB Zero-ETL | Jan 2025 | Auto-replicate to Redshift/SageMaker Lakehouse |
-| IAM MFA Enforcement | 2025 | Required for all root users |
-| FIDO2 Passkeys | 2025 | Passwordless MFA support |
-| IaC MCP Server | 2025 | AI-powered CDK/CloudFormation assistance |
-| Powertools v3 | Mar 2025 | Python v2 EOL, migrate to v3 |
-| Cost Optimization Hub | 2025 | Centralized optimization recommendations |
-| FOCUS 1.2 Standard | 2025 | Enhanced cost and usage data exports |
+| GuardDuty Extended Threat Detection | Dec 2025 | Unified visibility across EC2 and ECS |
+| S3 Storage Lens Performance Metrics | Dec 2025 | Analyze billions of prefixes, hot prefix detection |
+
+### Lambda Durable Functions
+
+Build applications that coordinate multiple steps reliably over extended periods (seconds to 1 year) without paying for idle compute time:
+
+```typescript
+// Durable function example - no Step Functions needed
+export const handler = async (event: DurableFunctionEvent) => {
+  // Step 1: Process order
+  const order = await processOrder(event.orderId);
+
+  // Wait for human approval (up to 7 days) - no compute cost while waiting
+  const approval = await waitForApproval(order.id, { timeout: '7d' });
+
+  if (approval.approved) {
+    // Step 2: Fulfill order
+    await fulfillOrder(order);
+  }
+
+  return { status: 'completed' };
+};
+```
+
+### Lambda Managed Instances
+
+Run Lambda functions on EC2 compute while maintaining serverless simplicity:
+- Access to specialized hardware (GPUs, high memory)
+- EC2 pricing models for cost optimization
+- AWS handles instance lifecycle, OS patching, load balancing, auto-scaling
+
+### Lambda INIT Phase Billing (August 2025)
+
+**Breaking Change:** INIT phase is now billed for all Lambda configurations:
+- Previously free for ZIP-packaged functions with managed runtimes
+- Now standardized across container images, custom runtimes, and Provisioned Concurrency
+- Optimize cold starts to reduce costs
+
+### S3 Vectors (Generally Available)
+
+Native vector storage and querying for AI/ML workloads:
+- Up to 2 billion vectors per index
+- 100ms query latencies
+- Up to 90% cost reduction vs specialized vector databases
+- Ideal for RAG, semantic search, and agentic workloads
+
+### ECS Express Mode
+
+Deploy containerized applications with a single command:
+```bash
+# Automatically provisions: load balancers, autoscaling, networking, domains
+aws ecs express deploy --image myapp:latest --name my-service
+```
+
+### Graviton5 Processors (EC2 M9g)
+
+- 25% higher performance vs Graviton4
+- 192 cores per chip
+- 5x larger cache
+- Best price-performance for general-purpose workloads
+
+### Database Savings Plans
+
+Up to 35% savings across seven services with flexible, cross-service commitments:
+- Aurora
+- RDS
+- DynamoDB
+- DocumentDB
+- Neptune
+- ElastiCache
+- Timestream
 
 ---
 

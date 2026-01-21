@@ -590,6 +590,62 @@ env:
 
 ---
 
+## 2025-2026 Changelog
+
+| Date | Change | Impact |
+|------|--------|--------|
+| Nov 2025 | **macOS M2 runners GA** | Use `macos-latest-xlarge`, `macos-15-xlarge` for M2 with GPU acceleration |
+| Jan 2026 | **Pricing reduction** | Up to 39% reduction for GitHub-hosted runners |
+| Jan 2026 | **Runner Docker image update** | Ubuntu 24.04 base in v2.331.0 |
+| Feb 2026 | **Runner v2.329.0 required** | Legacy runners blocked from connecting (brownouts start Feb 9) |
+| Mar 2026 | **Self-hosted runner fee** | $0.002/min platform charge (postponed for re-evaluation) |
+
+### macOS M2 Runners (Generally Available)
+
+```yaml
+jobs:
+  build-ios:
+    runs-on: macos-15-xlarge  # M2 powered, GPU acceleration
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build iOS app
+        run: xcodebuild -scheme MyApp -sdk iphoneos
+```
+
+Available M2 labels:
+- `macos-latest-xlarge` (latest stable)
+- `macos-15-xlarge`
+- `macos-14-xlarge`
+- `macos-13-xlarge`
+
+### Self-Hosted Runner Requirements
+
+**Mandatory upgrade by March 2, 2026:**
+- Minimum version: v2.329.0
+- Docker image base: Ubuntu 24.04 (from v2.331.0)
+- Legacy versions will be blocked from connecting
+
+### New Features
+
+**Workflows with 300+ Jobs:**
+GitHub Actions now supports lazy loading for large workflows, enabling smooth rendering of workflows with hundreds of jobs.
+
+**VNET Network Diagnostics:**
+For runners with Azure private networking, detailed diagnostics now show:
+- Per-endpoint connection visibility
+- Attempt counts and failure rates
+- Failure classification (timeouts, DNS failures, TLS issues)
+
+### Upcoming Investments (2026)
+
+- New scale-set client for self-hosted Actions
+- Multi-label support for Actions Runner Controller
+- Actions Data Stream for real-time observability
+- Windows support for autoscaling
+- New approaches to scaling beyond Linux containers
+
+---
+
 ## Resources
 
 - [GitHub Actions Documentation](https://docs.github.com/en/actions)
@@ -597,3 +653,5 @@ env:
 - [GitHub Actions Security Best Practices](https://www.stepsecurity.io/blog/github-actions-security-best-practices)
 - [Reusable Workflows](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 - [OIDC with Cloud Providers](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/about-security-hardening-with-openid-connect)
+- [GitHub Actions Pricing Changes](https://resources.github.com/actions/2026-pricing-changes-for-github-actions/)
+- [GitHub Actions Changelog](https://github.blog/changelog/label/actions/)

@@ -989,12 +989,54 @@ resource "aws_db_instance" "main" {
 | 1.6 | Jan 2024 | Initial stable release (fork from Terraform 1.6) |
 | 1.7 | Jun 2024 | State encryption, enhanced testing |
 | 1.8 | Nov 2024 | Early variable evaluation in `terraform` block, module sources with variables |
+| 1.9 | Jan 2025 | Provider `for_each`, simplified multi-zone deployments |
+| 1.10 | Jul 2025 | **OCI registry support**, native S3 locking, external key providers |
+
+### OpenTofu 1.10 Key Features (July 2025)
+
+**OCI Registry Support:**
+Native support for Open Container Initiative registries (Docker Hub, GitHub Container Registry) for provider and module distribution. Ideal for air-gapped and high-security environments.
+
+```hcl
+# Use OCI registry for modules
+module "vpc" {
+  source = "oci://ghcr.io/myorg/terraform-modules/vpc:v1.0.0"
+}
+```
+
+**Native S3 State Locking (No DynamoDB):**
+```hcl
+terraform {
+  backend "s3" {
+    bucket       = "terraform-state"
+    key          = "prod/terraform.tfstate"
+    region       = "us-east-1"
+    use_lockfile = true  # Native S3 locking, no DynamoDB needed
+  }
+}
+```
+
+**External Key Providers:**
+Integration with AWS KMS, HashiCorp Vault, and other key management services for state encryption.
+
+**New Planning Options:**
+- `-target-file` flag for resource targeting from a file
+- `-exclude-file` flag for excluding resources
+
+### OpenTofu CNCF Acceptance (April 2025)
+
+OpenTofu was accepted into the Cloud Native Computing Foundation (CNCF), solidifying its position in the cloud-native ecosystem. Notable adopters include Fidelity, who migrated from Terraform CE citing licensing certainty.
+
+### Terraform Cloud Changes
+
+**Important:** Terraform Cloud free tier ends **March 31, 2026**. Plan migration to OpenTofu, Terraform Enterprise, or alternative backends.
 
 ### Key Breaking Changes
 
 - **Terraform 1.10+**: DynamoDB locking deprecated; migrate to `use_lockfile = true`
 - **Terraform 1.11+**: Some provider-specific behaviors changed
 - **OpenTofu 1.7+**: State encryption format not backward compatible
+- **OpenTofu 1.10**: Migration path from Terraform 1.9.x requires OpenTofu 1.9.0 first
 
 ---
 

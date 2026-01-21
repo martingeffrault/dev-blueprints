@@ -784,6 +784,59 @@ spec:
 
 ---
 
+## 2025-2026 Changelog
+
+| Version | Date | Codename | Key Features |
+|---------|------|----------|--------------|
+| 1.32 | Dec 2024 | Penelope | Memory Manager GA, PVC auto-cleanup, Custom Resource Field Selectors |
+| 1.33 | Apr 2025 | - | Sidecar containers stable, enhanced VAC APIs |
+| 1.34 | Aug 2025 | - | Security enhancements, policy improvements |
+| 1.35 | Dec 2025 | Timbernetes | 60 enhancements (17 stable, 19 beta, 22 alpha) |
+
+### Kubernetes 1.32 "Penelope" Key Features
+
+**Memory Manager GA:**
+Efficient and predictable memory allocation for containerized applications, particularly beneficial for workloads with specific memory requirements.
+
+**PVC Auto-Cleanup:**
+PersistentVolumeClaims created by StatefulSets now include automatic cleanup when no longer needed, while maintaining data persistence during updates and maintenance.
+
+**Custom Resource Field Selectors:**
+Add field selectors to custom resources, enabling the same filtering capabilities available for built-in Kubernetes objects.
+
+**Deprecations:**
+- `flowcontrol.apiserver.k8s.io/v1beta3` API removed (FlowSchema, PriorityLevelConfiguration)
+- `ServiceAccount metadata.annotations[kubernetes.io/enforce-mountable-secrets]` deprecated
+
+### Kubernetes 1.35 "Timbernetes"
+
+Released December 17, 2025 with 60 enhancements:
+- 17 features graduated to stable
+- 19 features in beta
+- 22 new alpha features
+
+Major security features graduated to stable between v1.32 and v1.35.
+
+### Support Lifecycle
+
+| Version | Maintenance Mode | End of Life |
+|---------|-----------------|-------------|
+| 1.32 | Dec 28, 2025 | Feb 28, 2026 |
+| 1.33 | Apr 28, 2026 | Jun 28, 2026 |
+
+### Cloud Provider Updates
+
+**Amazon EKS:**
+- Kubernetes 1.32 is the last version with AL2 AMIs
+- From v1.33+: Only AL2023 and Bottlerocket AMIs supported
+- Beta VAC APIs supported until end of EKS 1.33 (July 29, 2026)
+
+**Google GKE:**
+- v1.32+ required for NFS volumes using NFSv4.0+ protocols
+- Enhanced node auto-provisioning for cost optimization
+
+---
+
 ## Resources
 
 - [Kubernetes Documentation](https://kubernetes.io/docs/)
@@ -792,3 +845,5 @@ spec:
 - [Kyverno Policies](https://kyverno.io/policies/)
 - [External Secrets Operator](https://external-secrets.io/)
 - [Kubernetes Best Practices 2025](https://komodor.com/learn/14-kubernetes-best-practices-you-must-know-in-2025/)
+- [Kubernetes v1.32 Release](https://kubernetes.io/blog/2024/12/11/kubernetes-v1-32-release/)
+- [Kubernetes v1.35 Release](https://kubernetes.io/blog/2025/12/17/kubernetes-v1-35-release/)
