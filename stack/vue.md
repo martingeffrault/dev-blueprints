@@ -1,22 +1,23 @@
 # Vue 3 (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 3.4+
+> **Versions covered**: 3.4, 3.5, 3.6 (Vapor)
 > **Purpose**: Progressive JavaScript framework for building UIs
 
 ---
 
 ## Philosophy (2025-2026)
 
-Vue 3 with the **Composition API** is the standard for modern Vue development, offering better TypeScript support and code organization.
+Vue 3 with the **Composition API** is the standard, with **Vapor Mode** bringing Solid-level performance.
 
 **Key philosophical shifts:**
 - **Composition API default** — `<script setup>` is the standard
-- **Logic by feature** — Group related code together
-- **Composables for reuse** — Extract and share logic
-- **TypeScript-first** — Full type inference
-- **Pinia for state** — Official state management
-- **Vapor mode coming** — No virtual DOM option
+- **Logic by feature** — Group related code together via composables
+- **TypeScript-first** — Full type inference with `defineProps<T>()`
+- **Pinia for state** — Official state management (Vuex deprecated)
+- **Vapor Mode (3.6)** — No Virtual DOM, Solid.js-level performance
+- **Alien Signals** — Next-gen reactivity with 70% less memory than 3.4
+- **Signal-based industry trend** — Vue aligns with Angular/Solid/Svelte signals
 
 ---
 
@@ -498,8 +499,56 @@ function getData() {
 |---------|------|-------------|
 | 3.3 | 2023 | Generic components, defineSlots |
 | 3.4 | Dec 2023 | defineModel, v-bind shorthand |
-| 3.5 | 2024 | Reactive props destructure, useTemplateRef |
-| Vapor | Coming | No virtual DOM mode |
+| 3.5 | Sep 2024 | **56% memory reduction**, 10x faster array reactivity, lazy hydration, stable prop destructuring |
+| **3.6** | **2025** | **Vapor Mode (beta)**, Alien Signals reactivity, 14% more memory reduction |
+
+### Vue 3.5 Highlights (Memory & Performance)
+
+```ts
+// Reactive props destructuring (stable in 3.5)
+const { title, count = 0 } = defineProps<{
+  title: string
+  count?: number
+}>()
+
+// Props remain reactive when destructured!
+watchEffect(() => {
+  console.log(title) // Tracks reactivity automatically
+})
+
+// useTemplateRef (cleaner than ref())
+const inputRef = useTemplateRef<HTMLInputElement>('input')
+```
+
+### Vue 3.6 Vapor Mode (Beta - Solid-level Performance)
+
+Vapor Mode compiles Vue SFCs to **direct DOM operations** without the Virtual DOM — achieving Solid.js-level performance.
+
+```vue
+<!-- MyComponent.vue (Vapor-compatible) -->
+<script setup lang="ts" vapor>
+// Opt-in with "vapor" attribute
+const count = ref(0)
+</script>
+
+<template>
+  <button @click="count++">{{ count }}</button>
+</template>
+```
+
+**Key Facts:**
+- 100% opt-in per component
+- Same level of performance as Solid.js and Svelte 5
+- Interoperable with Virtual DOM components
+- Smaller bundle size when Vapor-only
+
+### Alien Signals (Vue 3.6 Reactivity)
+
+Vue 3.6 uses [alien-signals](https://github.com/nickmccurdy/alien-signals) internally:
+- 14% less memory vs Vue 3.5 (70% less vs Vue 3.4)
+- Faster state change processing
+- Optimized computed effects
+- Industry-leading signal benchmarks
 
 ---
 
