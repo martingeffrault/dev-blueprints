@@ -449,12 +449,37 @@ npx drizzle-kit generate
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 0.30 | 2024 | Relational queries v2 |
+| 0.30 | 2024 | Relational queries v2 preview |
 | 0.33 | 2024 | Improved PostgreSQL support |
-| 0.36+ | 2025 | Performance improvements, better types |
-| 1.0 beta | 2025 | Stable API, production-ready |
+| 0.44 | Late 2024 | Last stable v0 release |
+| **1.0-beta.1** | Jan 2025 | RQBv2 stable, schema in relations |
+| **1.0-beta.2** | Feb 2025 | **MSSQL support**, native Bun/Deno, tsx loader |
 
-### Relational Queries v2 Changes
+### Drizzle 1.0 Breaking Changes
+
+**RQBv2 Syntax Change:**
+```typescript
+// v1 (deprecated → moved to db._query)
+import { relations } from 'drizzle-orm';
+export const usersRelations = relations(users, ({ many }) => ({
+  posts: many(posts),
+}));
+
+// v2 (new in 1.0) — schema IN the relations definition
+import { defineRelations } from 'drizzle-orm';
+export const relations = defineRelations(schema, (r) => ({
+  users: r.users({
+    posts: r.many.posts(),
+  }),
+}));
+```
+
+**drizzle-kit Changes:**
+- Migrated from `esbuild-register` to `tsx` loader
+- Native Bun and Deno support
+- `drizzle-kit pull` now generates `relations.ts` in new syntax
+
+### Relational Queries v2 Features
 
 ```typescript
 // v1 (deprecated)
