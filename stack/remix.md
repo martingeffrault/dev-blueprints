@@ -704,6 +704,36 @@ export default {
 };
 ```
 
+### React Router v7 New Features (2025)
+
+**Unstable RSC Support:**
+```typescript
+// First experimental React Server Components support in framework mode
+// Use with caution - API may change
+```
+
+**New APIs:**
+- `fetcher.reset()` - Reset fetchers to idle state
+- `prerender` config for SSG use-cases
+- `unstable_middleware` for route middleware
+- `unstable_splitRouteModules` for smaller bundles
+- `unstable_subResourceIntegrity` for security
+- `unstable_lazyMiddleware` for lazy loading middleware
+
+**Adoption:**
+React Router now powers apps at Shopify, X.com, GitHub, ChatGPT, Linear, T3Chat, and nearly 11 million GitHub projects.
+
+### Remix v3 Future Direction (2026)
+
+**Major Philosophical Shift:**
+Remix v3 represents a complete React-less rewrite:
+- Uses Preact fork instead of React
+- Imperative model with `this.update()`
+- Rejection of declarative React patterns
+- Total break from Remix v2
+
+**Note:** As of January 2026, Remix v3 is in early development with no official documentation. Information comes from Remix Jam 2025 conference previews.
+
 ---
 
 ## Quick Reference

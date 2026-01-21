@@ -526,9 +526,68 @@ const { error } = useQuery({ queryKey: ['user'], queryFn: fetchUser });
 
 ---
 
+## 2025-2026 Changelog
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| 5.0 | Oct 2023 | Single object API, Suspense stable, `isPending`, `gcTime` |
+| 5.50+ | 2024 | RSC experimental adapter, streaming improvements |
+| **5.90+** | **2025** | **Stable RSC support**, improved Next.js integration |
+
+### RSC + TanStack Query (2026 Pattern)
+
+Combining React Server Components with TanStack Query is emerging as the 2026 data-fetching pattern:
+
+```typescript
+// Server Component - Initial data fetch
+async function PostsPage() {
+  const queryClient = new QueryClient();
+
+  // Prefetch on server
+  await queryClient.prefetchQuery({
+    queryKey: ['posts'],
+    queryFn: getPosts,
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <PostsList />
+    </HydrationBoundary>
+  );
+}
+
+// Client Component - Mutations, background refetch
+'use client';
+function PostsList() {
+  // Data already hydrated from server
+  const { data: posts } = useSuspenseQuery({
+    queryKey: ['posts'],
+    queryFn: getPosts,
+  });
+
+  // Optimistic updates on client
+  const { mutate } = useMutation({
+    mutationFn: createPost,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['posts'] }),
+  });
+
+  return /* ... */;
+}
+```
+
+**Benefits of RSC + TanStack Query:**
+- Lightning-fast initial loads from server
+- Smart client-side caching after hydration
+- Optimistic mutations on client
+- Background refetches
+- Best of both worlds
+
+---
+
 ## Resources
 
 - [Official TanStack Query Documentation](https://tanstack.com/query/latest)
 - [Migration Guide v4 to v5](https://tanstack.com/query/latest/docs/framework/react/guides/migrating-to-v5)
 - [TkDodo's Blog](https://tkdodo.eu/blog/practical-react-query)
 - [React Query Devtools](https://tanstack.com/query/latest/docs/framework/react/devtools)
+- [RSC + TanStack Query Patterns](https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr)

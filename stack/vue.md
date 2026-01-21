@@ -550,6 +550,24 @@ Vue 3.6 uses [alien-signals](https://github.com/nickmccurdy/alien-signals) inter
 - Optimized computed effects
 - Industry-leading signal benchmarks
 
+### Ecosystem Updates (2025)
+
+**Nuxt 4.0** (Released mid-2025):
+- Cleaner project structure (`app/` directory)
+- Smarter built-in data fetching
+- Improved TypeScript support
+- Faster CLI
+
+**Pinia 3**:
+- Dropped Vue 2 support (reflecting complete Vue 3 migration)
+- Performance optimizations
+- Better TypeScript integration
+
+**Nuxt Labs Acquisition**:
+- Acquired by Vercel in 2025
+- Nuxt Studio and Nuxt UI Premium released as free tools
+- Nitro 3 (new server engine) expected in Nuxt 5 (2026)
+
 ---
 
 ## Quick Reference
