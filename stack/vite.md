@@ -1,8 +1,8 @@
-# Vite 6 (2025)
+# Vite 6/7 (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 6.x
-> **Future**: Vite+ announced (unified toolchain)
+> **Versions covered**: 6.x, 7.0+
+> **Future**: Vite+, Rolldown (Rust bundler)
 
 ---
 
@@ -278,10 +278,26 @@ import logo from '@/assets/logo.png';
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 6.0 | Nov 2024 | Environment API, Node 21 dropped, Sass legacy removed |
-| 6.x | 2025 | Stability improvements |
-| Vite+ | Oct 2025 | Announced — unified toolchain (testing, linting, formatting) |
+| 6.0 | Nov 2024 | Environment API (experimental), Node 21 dropped, Sass legacy removed |
+| 6.x | 2025 | Environment API stabilization |
+| **7.0** | **Dec 2025** | **ESM-only dist**, Rust integration, CJS still supported via Node 20.19+ |
+| Vite+ | 2025 | Announced — unified toolchain (testing, linting, formatting) |
 | Future | 2026 | Rolldown integration (Rust bundler) |
+
+### Vite 7.0 Highlights
+
+**ESM-only Distribution:**
+- Vite 7 distributed as ESM only
+- CJS still works via Node.js 20.19+ native `require(esm)` support
+- Existing plugins work without modification
+
+**Baseline Support:**
+- `target: 'baseline'` for Interop 2025 browser support
+- More predictable cross-browser behavior
+
+**Rust Integration:**
+- `vite preview` now uses Rust-based server
+- Foundation for future Rolldown bundler
 
 ### Vite 6.0 Breaking Changes
 
