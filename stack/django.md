@@ -1,7 +1,7 @@
 # Django (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 5.x
+> **Versions covered**: 5.0, 5.1, 5.2 LTS
 > **Purpose**: High-level Python web framework for rapid development
 
 ---
@@ -12,11 +12,97 @@ Django remains the **"batteries-included" framework** for Python web development
 
 **Key philosophical shifts:**
 - **Fat models, thin views** — Business logic in models/services
-- **Apps = modules** — Each app does one thing well
-- **Async support maturing** — ASGI for async views
-- **Type hints adoption** — Better IDE support
-- **Django Ninja rising** — For API-first projects
+- **Apps = bounded contexts** — Each app does one thing well (see App Segmentation below)
+- **Async ORM maturing** — Django 5.2 adds async auth, all QuerySet methods have `a-` variants
+- **Type hints adoption** — Better IDE support, use `django-stubs`
+- **Django Ninja rising** — For API-first projects (alternative to DRF)
 - **Celery for background tasks** — Signals are synchronous
+- **Composite primary keys** — New in Django 5.2 for legacy DB integration
+
+---
+
+## App Segmentation: When to Split vs. Single App
+
+This is one of the most important architectural decisions in Django. **There's no one-size-fits-all answer.**
+
+### Use Multiple Apps When:
+
+| Scenario | Reasoning |
+|----------|-----------|
+| **Large team** (5+ devs) | Reduces merge conflicts, clear ownership |
+| **Reusable components** | Auth, payments, notifications can be extracted |
+| **Future microservices** | Apps become natural service boundaries |
+| **Different release cycles** | Decouple features that evolve independently |
+| **70+ models** | Single app becomes unmaintainable |
+
+### Use Single Core App When:
+
+| Scenario | Reasoning |
+|----------|-----------|
+| **Small team** (1-3 devs) | Less overhead, faster iteration |
+| **MVP/Prototype** | Speed over structure |
+| **Tightly coupled domain** | Everything references everything |
+| **No reuse planned** | YAGNI — You Aren't Gonna Need It |
+
+### Decision Framework
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Can this feature be used in another project?                │
+│   YES → Separate app                                        │
+│   NO  → Could it become a microservice later?               │
+│           YES → Separate app                                │
+│           NO  → Does it have its own data model?            │
+│                   YES → Consider separate app               │
+│                   NO  → Keep in existing app                │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Nested Modules for Large Apps
+
+When an app grows too large but splitting isn't warranted, use **internal modules**:
+
+```
+apps/shop/                      # Single "shop" app
+├── __init__.py
+├── models/                     # Split models into modules
+│   ├── __init__.py             # from .product import Product; from .order import Order
+│   ├── product.py
+│   ├── order.py
+│   └── customer.py
+├── services/                   # Business logic modules
+│   ├── __init__.py
+│   ├── cart.py
+│   ├── checkout.py
+│   └── inventory.py
+├── views/
+│   ├── __init__.py
+│   ├── product_views.py
+│   └── order_views.py
+├── admin.py
+├── urls.py
+└── tests/
+    ├── test_cart.py
+    └── test_checkout.py
+```
+
+```python
+# apps/shop/models/__init__.py
+from .product import Product, Category
+from .order import Order, OrderItem
+from .customer import Customer
+
+__all__ = ['Product', 'Category', 'Order', 'OrderItem', 'Customer']
+```
+
+### Real-World Examples
+
+| Project Type | Recommended Structure |
+|--------------|----------------------|
+| Blog | Single `blog` app |
+| SaaS MVP | `core`, `accounts`, `billing` (3 apps) |
+| E-commerce | `products`, `orders`, `customers`, `payments`, `inventory` |
+| Large platform | 10-20+ apps with clear boundaries |
 
 ---
 
@@ -360,19 +446,77 @@ class PostForm(forms.ModelForm):
         return slug
 ```
 
-### Async Views (Django 4.1+)
+### Async Views & ORM (Django 5.2+)
 
 ```python
 # apps/blog/views.py
 from django.http import JsonResponse
-from asgiref.sync import sync_to_async
 
+# Django 5.2: Native async ORM — no more sync_to_async needed!
 async def async_post_list(request):
-    """Async view example."""
-    posts = await sync_to_async(list)(
-        Post.objects.filter(status='published').values('id', 'title')[:10]
-    )
+    """Async view with native async ORM."""
+    posts = []
+    # Use async for on QuerySets directly
+    async for post in Post.objects.filter(status='published')[:10]:
+        posts.append({'id': post.id, 'title': post.title})
     return JsonResponse({'posts': posts})
+
+# Async model methods
+async def async_create_post(request):
+    """Using async model methods."""
+    post = await Post.objects.acreate(
+        title='My Post',
+        slug='my-post',
+        author=request.user,
+        content='...'
+    )
+    return JsonResponse({'id': post.id})
+
+# Async aggregations
+async def async_stats(request):
+    """Async count and aggregations."""
+    count = await Post.objects.filter(status='published').acount()
+    exists = await Post.objects.filter(slug='my-post').aexists()
+    return JsonResponse({'count': count, 'exists': exists})
+```
+
+### Composite Primary Keys (Django 5.2+)
+
+```python
+# For legacy databases or many-to-many with extra fields
+from django.db import models
+
+class OrderItem(models.Model):
+    """Table with composite primary key."""
+    pk = models.CompositePrimaryKey('order_id', 'product_id')
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    class Meta:
+        # No need for unique_together anymore
+        pass
+
+# Usage
+item = OrderItem.objects.get(pk=(order_id, product_id))
+```
+
+### Django 5.0+ Field Groups (Form Rendering)
+
+```python
+# Template rendering made easier
+# In template:
+{{ form.title.as_field_group }}  # Renders label, input, errors, help_text
+
+# Customize the template project-wide in settings:
+FORM_RENDERER = 'django.forms.renderers.TemplatesSetting'
+
+# Or per-field:
+class MyForm(forms.Form):
+    title = forms.CharField(
+        bound_field_class=CustomBoundField  # Custom rendering
+    )
 ```
 
 ---
@@ -471,9 +615,33 @@ def queue_email_task(sender, instance, **kwargs):
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 5.0 | Dec 2023 | Async ORM improvements, Field Groups |
-| 5.1 | Aug 2024 | Async auth, loginrequired decorator |
-| 5.2 | 2025 | More async improvements |
+| 5.0 | Dec 2023 | Field groups (`as_field_group`), database-computed default values, `GeneratedField` |
+| 5.1 | Aug 2024 | Async auth backends, `@login_required` for async views, querystring template tag |
+| **5.2 LTS** | **Apr 2025** | **Composite primary keys**, shell auto-imports, async user/permission methods, `utf8mb4` MySQL default |
+
+### Django 5.2 LTS Highlights (Supported until April 2028)
+
+**Composite Primary Keys:**
+```python
+pk = models.CompositePrimaryKey('order_id', 'product_id')
+```
+
+**Shell Auto-imports:**
+```bash
+python manage.py shell
+# Models from all installed apps are auto-imported!
+>>> Post.objects.count()  # No import needed
+```
+
+**Async Auth Methods:**
+```python
+# New async methods on User model
+user = await User.objects.aget(pk=1)
+has_perm = await user.ahas_perm('blog.add_post')
+groups = [g async for g in user.groups.all()]
+```
+
+**Python Support:** 3.10, 3.11, 3.12, 3.13, 3.14
 
 ---
 
