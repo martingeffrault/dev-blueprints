@@ -520,9 +520,41 @@ async def process_data(data: LargeData):
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 0.100+ | 2024 | Pydantic v2 full support |
-| 0.110+ | 2025 | Performance improvements |
-| 2025 | Trend | Mainstream for ML/data APIs |
+| 0.100+ | Jul 2023 | Pydantic v2 full support (5-50x faster validation) |
+| 0.109+ | Nov 2024 | Dropped Pydantic v1 support, minimum `pydantic >=2.7.0` |
+| 0.115+ | 2025 | Python 3.14 support, performance improvements |
+| 2025 | Trend | Mainstream for ML/LLM serving, data platforms |
+
+### Key Migration Notes (2025)
+
+**Pydantic v1 Deprecated** — FastAPI now requires Pydantic v2:
+```python
+# Before (v1 style) - NO LONGER WORKS
+class User(BaseModel):
+    class Config:
+        orm_mode = True
+
+# After (v2 style)
+class User(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+```
+
+**Lifespan Replaces on_event** — `@app.on_event()` is deprecated:
+```python
+# ❌ Deprecated
+@app.on_event("startup")
+async def startup():
+    pass
+
+# ✅ Use lifespan context manager
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await startup_logic()
+    yield
+    await shutdown_logic()
+
+app = FastAPI(lifespan=lifespan)
+```
 
 ---
 
