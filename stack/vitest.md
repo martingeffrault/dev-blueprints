@@ -1,7 +1,7 @@
 # Vitest (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 2.x
+> **Versions covered**: 3.x, 4.x
 > **Integration**: Native Vite compatibility
 
 ---
@@ -338,9 +338,162 @@ expect(onClick).toHaveBeenCalledTimes(1);
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | 2024 | Stable browser mode, improved workspaces |
-| 2.x | 2025 | Performance improvements, better error messages |
-| Vite+ | Oct 2025 | Vitest becomes part of unified Vite+ toolchain |
+| **4.0** | Dec 2025 | Browser Mode stable, visual regression, Playwright Traces |
+| **3.2** | Nov 2025 | Custom locators, watchTriggerPatterns, projects config |
+| **3.0** | Aug 2025 | Line number filtering, browser instances |
+| 2.0 | 2024 | Workspaces, improved coverage |
+
+### Vitest 4.0 — Browser Mode Stable
+
+**Browser Mode is Now Stable:**
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright', // or 'webdriverio', 'preview'
+      instances: [
+        { browser: 'chromium' },
+        { browser: 'firefox' },
+      ],
+    },
+  },
+});
+```
+
+**New Provider Packages (Breaking):**
+```bash
+# ❌ OLD — Browser provider included
+npm install @vitest/browser
+
+# ✅ NEW — Install provider separately
+npm install @vitest/browser-playwright
+# or
+npm install @vitest/browser-webdriverio
+# or
+npm install @vitest/browser-preview
+```
+
+**Built-in Visual Regression Testing:**
+```typescript
+import { expect, test } from 'vitest';
+import { page } from '@vitest/browser/context';
+
+test('visual regression', async () => {
+  await page.goto('/dashboard');
+  await expect(page).toMatchScreenshot('dashboard.png');
+});
+```
+
+**Playwright Traces Integration:**
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      provider: 'playwright',
+      providerOptions: {
+        trace: 'on-first-retry', // Capture traces on failure
+      },
+    },
+  },
+});
+```
+
+### Vitest 3.2 — Custom Locators
+
+**Custom Locators API:**
+```typescript
+// Extend locators with custom methods
+import { locators } from '@vitest/browser/context';
+
+const customLocators = locators.extend({
+  getByDataTest: (container, testId: string) => {
+    return container.querySelector(`[data-test="${testId}"]`);
+  },
+});
+
+// Use in tests
+const button = customLocators.getByDataTest('submit-btn');
+```
+
+**Watch Trigger Patterns:**
+```typescript
+// vitest.config.ts — Rerun specific tests based on file changes
+export default defineConfig({
+  test: {
+    watchTriggerPatterns: [
+      // When a component changes, run its tests
+      ['src/components/**/*.tsx', 'src/components/**/*.test.tsx'],
+      // When utils change, run all tests
+      ['src/utils/**/*.ts', '**/*.test.ts'],
+    ],
+  },
+});
+```
+
+**Projects Config (Replaces Workspace):**
+```typescript
+// ❌ OLD — Workspace config
+// vitest.workspace.ts (deprecated)
+
+// ✅ NEW — Projects in main config
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    projects: [
+      {
+        name: 'unit',
+        include: ['src/**/*.test.ts'],
+      },
+      {
+        name: 'browser',
+        include: ['src/**/*.browser.test.ts'],
+        browser: { enabled: true },
+      },
+    ],
+  },
+});
+```
+
+### Vitest 3.0 Features
+
+**Line Number Filtering:**
+```bash
+# Run specific test by line number
+vitest path/to/file.test.ts:42
+
+# Run tests on lines 42 and 100
+vitest path/to/file.test.ts:42,100
+```
+
+**Browser Instances:**
+```typescript
+// Run tests in multiple browser configs without workspace
+export default defineConfig({
+  test: {
+    browser: {
+      enabled: true,
+      instances: [
+        { browser: 'chromium', name: 'chrome-desktop' },
+        { browser: 'chromium', name: 'chrome-mobile', viewport: { width: 375, height: 667 } },
+        { browser: 'firefox' },
+      ],
+    },
+  },
+});
+```
+
+### Adoption & Ecosystem
+
+- **17M weekly downloads** (up from 7M in 2024)
+- **Storybook integration** — Test stories with Vitest
+- **Evalite** — AI app evaluation built on Vitest
+- **VS Code extension** — First-class IDE support
 
 ---
 

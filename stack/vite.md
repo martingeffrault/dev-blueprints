@@ -278,33 +278,160 @@ import logo from '@/assets/logo.png';
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 6.0 | Nov 2024 | Environment API (experimental), Node 21 dropped, Sass legacy removed |
-| 6.x | 2025 | Environment API stabilization |
-| **7.0** | **Dec 2025** | **ESM-only dist**, Rust integration, CJS still supported via Node 20.19+ |
-| Vite+ | 2025 | Announced — unified toolchain (testing, linting, formatting) |
+| **6.0** | Nov 2024 | Environment API, ssr boolean → environment, Sass legacy removed |
+| **6.x** | 2025 | Environment API RC phase |
+| **7.0** | Dec 2025 | ESM-only dist, Rust preview server |
+| Vite+ | 2025 | Announced — unified toolchain |
 | Future | 2026 | Rolldown integration (Rust bundler) |
+
+### Vite 6.0 — Environment API (Game Changer)
+
+**What it is**: The most significant major release since Vite 2. Framework authors can now create multiple environments (client, SSR, workerd, etc.) that closely match production.
+
+**Why it matters**: Edge deployment (Cloudflare Workers, Vercel Edge) is now as convenient as Node.js development.
+
+```typescript
+// vite.config.ts — Multiple environments
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  environments: {
+    client: {
+      // Standard browser environment (default)
+    },
+    ssr: {
+      // Node.js SSR environment
+      optimizeDeps: {
+        include: ['some-ssr-dep'],
+      },
+    },
+    workerd: {
+      // Cloudflare Workers environment
+      webCompatible: true,
+      resolve: {
+        conditions: ['workerd'],
+      },
+    },
+  },
+});
+```
+
+**Plugin Hook Changes (Breaking):**
+```typescript
+// ❌ OLD — ssr boolean in last options parameter
+export default function myPlugin() {
+  return {
+    name: 'my-plugin',
+    resolveId(id, importer, options) {
+      if (options.ssr) {
+        // Handle SSR
+      }
+    },
+  };
+}
+
+// ✅ NEW — Use this.environment
+export default function myPlugin() {
+  return {
+    name: 'my-plugin',
+    resolveId(id, importer, options) {
+      if (this.environment.name === 'ssr') {
+        // Handle SSR
+      }
+      // Or check environment mode:
+      if (this.environment.mode === 'ssr') {
+        // Handle any SSR-like environment
+      }
+    },
+  };
+}
+```
+
+**API Status**:
+- Environment API is in **RC phase** — stable between major releases
+- Some specific APIs still marked experimental
+- Backward compatible for SPAs and existing SSR setups
+
+### Vite 6.0 Breaking Changes
+
+**Build Target Renamed:**
+```typescript
+// ❌ OLD — 'modules' target
+export default defineConfig({
+  build: {
+    target: 'modules', // Error in Vite 6
+  },
+});
+
+// ✅ NEW — 'baseline-widely-available'
+export default defineConfig({
+  build: {
+    target: 'baseline-widely-available', // Chrome 107+, Edge 107+, Firefox 104+, Safari 16+
+  },
+});
+```
+
+**Sass Legacy API Removed:**
+```typescript
+// ❌ OLD — Legacy API option
+css: {
+  preprocessorOptions: {
+    scss: {
+      api: 'legacy', // Removed in Vite 6!
+    },
+  },
+}
+
+// ✅ NEW — Modern API is the only option
+css: {
+  preprocessorOptions: {
+    scss: {
+      // api option removed — modern API only
+      additionalData: `@use "variables" as *;`,
+    },
+  },
+}
+```
+
+**CSS Output File Name in Library Mode:**
+```typescript
+// ❌ OLD — CSS output was always style.css
+// ✅ NEW — CSS uses name from package.json or build.lib.fileName
+export default defineConfig({
+  build: {
+    lib: {
+      fileName: 'my-lib', // CSS output: my-lib.css (not style.css)
+    },
+  },
+});
+```
+
+**Node.js Support:**
+- Node.js 18, 20, 22+ supported
+- Node.js 21 dropped
 
 ### Vite 7.0 Highlights
 
 **ESM-only Distribution:**
-- Vite 7 distributed as ESM only
-- CJS still works via Node.js 20.19+ native `require(esm)` support
-- Existing plugins work without modification
+```bash
+# Vite 7 distributed as ESM only
+# CJS still works via Node.js 20.19+ require(esm) support
+# Existing plugins work without modification
+```
 
 **Baseline Support:**
-- `target: 'baseline'` for Interop 2025 browser support
-- More predictable cross-browser behavior
+```typescript
+// NEW — Interop 2025 browser support
+export default defineConfig({
+  build: {
+    target: 'baseline', // Baseline Widely Available features
+  },
+});
+```
 
 **Rust Integration:**
-- `vite preview` now uses Rust-based server
-- Foundation for future Rolldown bundler
-
-### Vite 6.0 Breaking Changes
-
-- **Node.js**: Supports 18, 20, 22+ only (21 dropped)
-- **Build target**: `'modules'` renamed to `'baseline-widely-available'`
-- **Sass**: Legacy API removed, modern API only
-- **Browser support**: Chrome 107+, Edge 107+, Firefox 104+, Safari 16+
+- `vite preview` uses Rust-based server
+- Foundation for Rolldown bundler integration
 
 ### Vite+ (Announced 2025)
 

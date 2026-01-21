@@ -514,16 +514,106 @@ const count = createMemo(() => items().length);  // Derived!
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| **1.9** | Dec 2024 | Unified async/streaming SSR, onCleanup on server |
 | 1.8 | 2024 | Improved TypeScript, better errors |
-| 1.9 | 2025 | Performance improvements |
-| 2.0 | Coming | New compilation, async primitives |
+| **SolidStart 1.0** | May 2024 | createAsync, cache, action APIs |
+| **2.0** | In Development | Signals 2.0, simplified reactivity |
+
+### Solid 1.9 — Unified Async SSR
+
+**Key Change**: Async and streaming rendering are now unified:
+```tsx
+// Before 1.9: Async and streaming were separate code paths
+// After 1.9: Same code path, just different flushing strategy
+
+// Error Boundaries now server-render in async mode
+// (Previously they were client-only)
+<ErrorBoundary fallback={<Error />}>
+  <Suspense fallback={<Loading />}>
+    <AsyncComponent />
+  </Suspense>
+</ErrorBoundary>
+
+// onCleanup now runs on server if branch changes
+createEffect(() => {
+  onCleanup(() => {
+    // Now runs on server too!
+  });
+});
+```
+
+### SolidStart 1.0 Breaking Changes
+
+**New Data APIs (Breaking):**
+```tsx
+// ❌ OLD — createRouteData, createServerData$
+import { createRouteData, createServerData$ } from 'solid-start';
+
+// ✅ NEW — createAsync, cache, action
+import { createAsync, cache, action } from '@solidjs/router';
+
+// Cache function (replaces createRouteData)
+const getUser = cache(async (id: string) => {
+  'use server';
+  return db.user.findUnique({ where: { id } });
+}, 'user');
+
+// Use in component
+function UserProfile(props: { id: string }) {
+  const user = createAsync(() => getUser(props.id));
+  return <Show when={user()}>{(u) => <h1>{u().name}</h1>}</Show>;
+}
+
+// Action (replaces createServerAction$)
+const updateUser = action(async (formData: FormData) => {
+  'use server';
+  const name = formData.get('name');
+  // ...
+});
+```
+
+**Router Independence:**
+```tsx
+// SolidStart no longer requires @solidjs/router
+// Any router can be used with file-system routing
+
+// @solidjs/router and @solidjs/meta are optional
+```
+
+**Server Functions in Components (v1.1.0+):**
+```tsx
+// ❌ BREAKING in v1.1.0 — No inline server functions in components
+function MyComponent() {
+  const getData = async () => {
+    'use server';
+    return db.getData(); // Error!
+  };
+}
+
+// ✅ DO — Define server functions outside components
+const getData = cache(async () => {
+  'use server';
+  return db.getData();
+}, 'data');
+
+function MyComponent() {
+  const data = createAsync(() => getData());
+}
+```
 
 ### Solid 2.0 Preview
 
-- New compiler for even smaller bundles
-- Improved async primitives
-- Better streaming SSR
-- Enhanced dev tools
+Development is underway with focus on:
+- **Signals 2.0** — Simpler reactive model
+- **Props improvements** — Better destructuring, spread, binding
+- **Smaller bundles** — New compiler optimizations
+- **Enhanced dev tools**
+
+The team is releasing experiments via `@solidjs/signals`:
+```tsx
+// Experimental: May change before 2.0
+import { createSignal } from '@solidjs/signals';
+```
 
 ---
 

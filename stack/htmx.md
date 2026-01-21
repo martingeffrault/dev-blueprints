@@ -457,13 +457,153 @@ ${userInput}
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | 2024 | Stable release, attribute inheritance |
-| 2.x | 2025 | Stability improvements |
-| 4.0 | Future | Explicit attribute inheritance |
+| **2.0** | Jun 2024 | Extensions moved out, Web Components, DELETE query params |
+| **2.x** | 2025 | Stability focus, extensions API |
+| **4.0** | Future | fetch() API, explicit inheritance |
 
-### HTMX Stability Promise
+### HTMX 2.0 Breaking Changes
 
-> "htmx you write in 2025 will look very similar to htmx you write in 2035 and beyond."
+**Extensions Moved Out of Core:**
+```html
+<!-- ❌ OLD — Extensions bundled in htmx -->
+<script src="htmx.min.js"></script>
+<!-- SSE, WS, etc. were included -->
+
+<!-- ✅ NEW — Load extensions separately -->
+<script src="https://unpkg.com/htmx.org@2/dist/htmx.min.js"></script>
+<script src="https://unpkg.com/htmx-ext-sse@2/sse.js"></script>
+<script src="https://unpkg.com/htmx-ext-ws@2/ws.js"></script>
+<script src="https://unpkg.com/htmx-ext-head-support@2/head-support.js"></script>
+```
+
+**DELETE Requests Now Use Query Params:**
+```html
+<!-- ❌ OLD (htmx 1.x) — DELETE with body params -->
+<button hx-delete="/api/items/123" hx-vals='{"confirm": true}'>
+  <!-- Params were sent in request body -->
+</button>
+
+<!-- ✅ NEW (htmx 2.x) — DELETE with query params -->
+<button hx-delete="/api/items/123?confirm=true">
+  <!-- Or use proper HTTP semantics -->
+</button>
+
+<!-- If you need body params (not recommended), use POST with X-HTTP-Method-Override -->
+```
+
+**SSE/WebSocket Syntax Changed:**
+```html
+<!-- ❌ OLD (htmx 1.x) — Space-separated -->
+<div hx-sse="connect /chat swap message">
+
+<!-- ✅ NEW (htmx 2.x) — Colon-separated, extension attribute -->
+<div hx-ext="sse" sse-connect="/chat" sse-swap="message">
+```
+
+**WebSocket Extension:**
+```html
+<!-- ❌ OLD -->
+<div hx-ws="connect /chat">
+
+<!-- ✅ NEW — Explicit extension -->
+<div hx-ext="ws" ws-connect="/chat">
+  <form ws-send>
+    <input name="message">
+    <button>Send</button>
+  </form>
+</div>
+```
+
+**Disable Attribute Inheritance:**
+```html
+<!-- NEW — Disable inheritance globally -->
+<script>
+  htmx.config.disableInheritance = true;
+</script>
+
+<!-- Or per-element -->
+<div hx-inherit="false">
+  <button hx-get="/api/data">No inherited attrs</button>
+</div>
+```
+
+**selfRequestsOnly Default Changed:**
+```javascript
+// NEW DEFAULT — Only same-origin requests allowed
+// htmx.config.selfRequestsOnly = true (default)
+
+// To allow cross-origin (not recommended):
+htmx.config.selfRequestsOnly = false;
+```
+
+**Response Handling Configuration:**
+```javascript
+// NEW — Configure response code handling
+htmx.config.responseHandling = [
+  { code: "204", swap: false },           // No swap on 204
+  { code: "[23]..", swap: true },          // Swap on 2xx/3xx
+  { code: "[45]..", swap: false, error: true }, // Error on 4xx/5xx
+];
+```
+
+### HTMX Extensions (2.x)
+
+**Head Support (Built-in alternative):**
+```html
+<!-- Head tag merging is now built into htmx 2.0 -->
+<!-- For more control, use the extension: -->
+<script src="https://unpkg.com/htmx-ext-head-support@2/head-support.js"></script>
+<body hx-ext="head-support">
+```
+
+**Multi-Swap Extension:**
+```html
+<script src="https://unpkg.com/htmx-ext-multi-swap@2/multi-swap.js"></script>
+
+<!-- Swap multiple targets with one response -->
+<button
+  hx-get="/api/dashboard"
+  hx-ext="multi-swap"
+  hx-swap="multi:#stats:innerHTML,#chart:outerHTML"
+>
+  Refresh Dashboard
+</button>
+```
+
+**Preload Extension:**
+```html
+<script src="https://unpkg.com/htmx-ext-preload@2/preload.js"></script>
+
+<!-- Preload on hover/focus -->
+<a href="/page" hx-ext="preload" preload="mousedown">
+  Fast Navigation
+</a>
+```
+
+### Web Components Support (2.0)
+
+```html
+<!-- htmx now works properly in Shadow DOM -->
+<my-component>
+  #shadow-root
+    <button hx-get="/api/data" hx-target="#result">
+      Load Data
+    </button>
+    <div id="result"></div>
+</my-component>
+```
+
+### HTMX 2025+ Direction
+
+The htmx team prioritizes **stability over new features**:
+- Core library will resist new features
+- New capabilities added via extensions
+- "htmx you write in 2025 will look very similar to htmx you write in 2035"
+
+**HTMX 4.x Preview:**
+- All AJAX requests will use native `fetch()` instead of XMLHttpRequest
+- Even more explicit attribute inheritance
+- Further Web Standards alignment
 
 ---
 
