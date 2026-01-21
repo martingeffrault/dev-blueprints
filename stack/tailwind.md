@@ -365,12 +365,39 @@ npx @tailwindcss/upgrade
 
 ### v4.0 Key Features
 
-- **Oxide Engine**: Rust-based, 5x faster full builds, 100x faster incremental
+- **Oxide Engine**: Rust-based, 5x faster full builds, 100x faster incremental (44ms → 5ms)
 - **CSS-First Config**: `@theme` directive replaces JavaScript config
 - **Modern CSS**: Native `@layer`, `@property`, `color-mix()`
 - **Container Queries**: Built into core
 - **Automatic Content Detection**: No need to configure template paths
 - **35% Smaller**: Reduced dependency footprint
+- **OKLCH Colors**: P3 wide-gamut colors (more vibrant blues/greens)
+
+### Breaking Changes (v3 → v4)
+
+| v3 | v4 |
+|----|-----|
+| `@tailwind base/components/utilities` | `@import "tailwindcss"` |
+| `tailwind.config.js` | `@theme { }` in CSS |
+| `border-gray-200` default | `border-currentColor` default |
+| `ring-3` + `ring-blue-500` default | `ring-1` + `ring-currentColor` |
+| `!flex` (prefix) | `flex!` (suffix) |
+| `bg-gradient-to-r` | `bg-linear-to-r` |
+| Content paths required | Auto-detected |
+| Works with Sass/Less | Not compatible (Tailwind IS the preprocessor) |
+
+### Migration
+
+```bash
+# Automatic upgrade tool
+npx @tailwindcss/upgrade
+
+# Manual steps:
+# 1. Remove tailwind.config.js (move theme to @theme)
+# 2. Replace @tailwind directives with @import
+# 3. Update deprecated utilities (gradient → linear)
+# 4. Test border/ring colors (now currentColor)
+```
 
 ---
 
