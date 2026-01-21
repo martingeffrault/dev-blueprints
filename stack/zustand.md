@@ -378,11 +378,61 @@ const useUIStore = create({ ... });
 
 ---
 
+## 2025-2026 Changelog
+
+| Version | Date | Key Changes |
+|---------|------|-------------|
+| 4.5 | 2024 | persist middleware behavior change, deprecation warnings |
+| **5.0** | **Nov 2024** | **React 18+ required**, TypeScript 5+, dropped use-sync-external-store |
+| 5.0.8 | 2025 | Bug fixes, stability |
+
+### Zustand v5 Breaking Changes
+
+**React 18+ Required:**
+```typescript
+// Uses native useSyncExternalStore (no polyfill)
+// React 17 and below no longer supported
+```
+
+**Custom Equality Function:**
+```typescript
+// v4 — create() accepted shallow
+import { create } from 'zustand';
+const useStore = create(fn, { equalityFn: shallow }); // ❌ No longer works
+
+// v5 — use createWithEqualityFn
+import { createWithEqualityFn } from 'zustand/traditional';
+import { shallow } from 'zustand/shallow';
+const useStore = createWithEqualityFn(fn, shallow); // ✅
+```
+
+**Persist Middleware Change:**
+```typescript
+// v5 no longer persists initial state automatically
+// Must call setState after creation if needed
+const useStore = create(
+  persist(
+    (set) => ({ count: 0 }),
+    { name: 'counter' }
+  )
+);
+// Initial state NOT persisted until first setState call
+```
+
+**TypeScript Currying Required:**
+```typescript
+// Always use double parentheses for proper type inference
+const useStore = create<State>()((set) => ({ ... }));
+//                           ^^ Required
+```
+
+---
+
 ## Quick Reference
 
 | Task | Solution |
 |------|----------|
-| Create store | `create<State>((set) => ({ ... }))` |
+| Create store | `create<State>()((set) => ({ ... }))` |
 | Read state | `useStore((state) => state.value)` |
 | Update state | `set({ value: newValue })` |
 | Update based on prev | `set((state) => ({ count: state.count + 1 }))` |
