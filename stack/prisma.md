@@ -407,10 +407,36 @@ const users = await prisma.user.findMany({
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 5.7 | 2024 | TypedSQL, relationLoadStrategy |
-| 6.0 | Nov 2024 | Query Compiler (TypeScript), better performance |
-| 6.16+ | 2025 | Query Compiler production-ready |
+| 5.7 | 2024 | TypedSQL preview, `relationLoadStrategy` |
+| 6.0 | Nov 2024 | Query Compiler (TypeScript), TypeScript 5.1+ required |
+| 6.2 | Dec 2024 | **Omit GA** (exclude fields from results) |
+| 6.6+ | 2025 | Query Compiler production-ready, edge improvements |
 | 7.0 | 2025 | Rust-free, 3.4x faster, 90% smaller bundle |
+
+### Prisma 6 Breaking Changes
+
+**Buffer → Uint8Array:**
+```typescript
+// Before (v5) — Buffer for Bytes fields
+const data: Buffer = record.binaryField;
+
+// After (v6) — Uint8Array
+const data: Uint8Array = record.binaryField;
+```
+
+**Omit Feature (GA in 6.2):**
+```typescript
+// Exclude sensitive fields from results
+const user = await prisma.user.findUnique({
+  where: { id: userId },
+  omit: { password: true, apiKey: true },
+});
+// user has no password or apiKey fields
+```
+
+**M2M Relations (PostgreSQL):**
+- Implicit M2M relation tables now use **primary key** instead of unique index
+- Affects replica identity behavior
 
 ### Prisma 7 Architecture
 
