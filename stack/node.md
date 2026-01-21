@@ -1,7 +1,7 @@
 # Node.js 22+ (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 22 LTS, 23, 24 LTS
+> **Versions covered**: 22 LTS (22.20+), 23, 24 LTS, 25
 > **Key feature**: Native TypeScript execution
 
 ---
@@ -422,10 +422,42 @@ process.on('SIGINT', async () => {
 |---------|------|-------------|
 | 22.0 | Apr 2024 | V8 12.4, ESM `require()` behind flag, WebSocket client |
 | 22.6 | Jul 2024 | `--experimental-strip-types` (TypeScript) |
+| 22.11 | Oct 2024 | Entered Active LTS |
 | 22.18 | Jul 2025 | Native TypeScript support unflagged |
+| **22.20.0 LTS** | **Dec 2025** | **OpenSSL 3.5.2** bundled (support through 2027) |
 | 23.0 | Oct 2024 | ESM `require()` default, stabilized `--run` flag |
 | 23.6 | Jan 2025 | TypeScript direct execution improvements |
-| 24.0 | Oct 2025 | LTS release, reduced external dependencies |
+| **24.0 LTS** | **Oct 2025** | LTS release, reduced external dependencies |
+| 25.x | Oct 2025 | Current release line |
+
+### Support Timeline (Critical)
+
+| Version | Status | End of Life |
+|---------|--------|-------------|
+| Node 18.x | Maintenance | **April 2025** (imminent!) |
+| **Node 22.x** | **Active LTS** | April 2027 |
+| **Node 24.x** | **Active LTS** | April 2028 |
+| Node 25.x | Current | For testing new features |
+
+**Action Required**: Upgrade from Node 18 before April 2025!
+
+### Performance Improvements (Node 22)
+
+- **30% faster startup** compared to Node 20
+- HTTP/3 (QUIC) support for faster, encrypted communication
+- Built-in profiling tools for execution bottlenecks and memory leaks
+- Improved Trace Events API and heap snapshot support
+
+### OpenSSL Update (22.20.0 LTS)
+
+Node.js 22.x now bundles **OpenSSL 3.5.2**:
+- Previous OpenSSL 3.0.x goes out of support September 2026
+- This update ensures Node 22.x support through planned EOL (April 2027)
+- Important for security compliance
+
+### Security Releases (January 2026)
+
+Security releases addressed high, low, and medium severity issues across all supported versions. Always use up-to-date versions.
 
 ### Native TypeScript: Important Details
 

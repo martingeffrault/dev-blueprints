@@ -1,7 +1,7 @@
 # Svelte 5 (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 5.x
+> **Versions covered**: Svelte 5.0–5.46+, SvelteKit 2.x
 > **Purpose**: Compile-time reactive framework with minimal runtime
 
 ---
@@ -498,8 +498,75 @@ export function useFetch<T>(url: string) {
 |---------|------|-------------|
 | 5.0 | Oct 2024 | Runes, Snippets, Event attributes |
 | **5.25** | **2025** | **`$derived` now reassignable** — use `const` for read-only |
-| 5.x | 2025 | Stability improvements |
-| SvelteKit 2.x | 2025 | Full Svelte 5 integration |
+| 5.34 | Mid 2025 | `$inspect.trace` with source name logging |
+| 5.40 | Late 2025 | `createContext` passes types with stored context |
+| **5.41** | **Late 2025** | **`$state.eager(value)`** — immediate UI updates |
+| 5.42 | Late 2025 | `fork` API for offscreen state changes |
+| 5.44 | Dec 2025 | `hydratable` API for hydration coordination |
+| 5.45 | Dec 2025 | `print` API converts AST to Svelte source |
+| 5.46 | Jan 2026 | CSP (Content Security Policy) support in hydratable |
+| SvelteKit 2.22 | Jul 2025 | **Vite 7 + Rolldown support** (faster builds) |
+| SvelteKit 2.49 | Dec 2025 | File uploads streaming in remote functions |
+
+### Key 2025-2026 Features
+
+**$state.eager(value) — Immediate UI Updates (5.41+)**
+```svelte
+<script>
+  // Normal $state waits for await to resolve before updating UI
+  let data = $state(null);
+
+  // $state.eager updates UI immediately, doesn't wait for async
+  let eagerData = $state.eager(null);
+</script>
+```
+
+**fork API — Offscreen State Changes (5.42+)**
+```svelte
+<script>
+  // Change state "offscreen" to discover async work without committing to UI
+  import { fork } from 'svelte';
+
+  const result = fork(() => {
+    // State changes here are isolated
+    myState = newValue;
+    // Async work discovered but not committed
+  });
+</script>
+```
+
+**Svelte MCP Server — Official AI Integration**
+- Official Model Context Protocol server available
+- Replaces copy/pasting Svelte docs for LLMs
+- Provides suggestions with static analysis
+- Available as JS API and CLI (`mcp@0.1.16`)
+
+**SvelteKit + Vite 7 + Rolldown (2.22+)**
+- Faster compilation with Rolldown
+- Note: Larger bundle sizes until tree-shaking implemented in Rolldown
+
+**Async Components — Summer 2025**
+```svelte
+<script>
+  // Direct await in component scripts - eliminates boilerplate
+  const data = await fetchData();
+</script>
+```
+
+**Remote Functions — Type-Safe Server Communication**
+- Type-safe server calls without GraphQL or tRPC complexity
+- File upload streaming support (2.49+)
+
+**Platform Support Updates (Jan 2026)**
+- Vercel adapter supports Node 24
+- Svelte CLI fully supports Cloudflare Workers/Pages
+
+### 2026 Vision
+
+- Moving from "exciting alternative" to **mainstream standard**
+- Expected significant enterprise adoption
+- Seamless SvelteKit integration for full-stack development
+- Performance: 15-30% smaller bundles, faster initial loads
 
 ### Svelte 5.25+ Breaking Change
 

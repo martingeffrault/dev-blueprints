@@ -1,7 +1,7 @@
 # Go Gin (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Gin 1.10+
+> **Versions covered**: Gin 1.10–1.11+, Go 1.23+
 > **Purpose**: High-performance HTTP web framework for Go with Martini-like API
 
 ---
@@ -892,7 +892,25 @@ router.Use(authMiddleware)    // 4. Authentication (route-specific)
 |---------|------|-------------|
 | 1.9 | 2023 | Stable release |
 | 1.10 | 2024 | Performance improvements, bug fixes |
-| 1.10.x | 2025 | Continued maintenance, security patches |
+| **1.11.0** | **Sep 2025** | **Latest stable**, Go 1.23 minimum required |
+| 1.11.x | 2025-26 | Continued maintenance, 178k+ importing projects |
+
+### Gin Ecosystem Position (2025-2026)
+
+**Market Dominance**
+- **48% market share** — Nearly half of Go developers use Gin (up from 41% in 2020)
+- gorilla/mux declining to 17% post-archival
+- chi gaining share as a stdlib-compatible alternative
+- Gin remains the most recommended Go web framework
+
+**Go 1.22+ stdlib routing impact**
+- Go 1.22 introduced enhanced `net/http` routing with path parameters
+- Reduced necessity for third-party routers for simple use cases
+- Gin still preferred for: middleware ecosystem, performance-critical apps, validation
+
+**Minimum Go Version**
+- Gin 1.11+ requires **Go 1.23 or above**
+- Leverage new Go language features (see below)
 
 ### Go 1.22/1.23 Language Features
 

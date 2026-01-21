@@ -1,7 +1,7 @@
 # Axum (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Axum 0.8+
+> **Versions covered**: Axum 0.7–0.8+
 > **Purpose**: Ergonomic, modular Rust web framework built on Tokio and Tower
 
 ---
@@ -731,14 +731,82 @@ pub async fn read_file() -> Result<String, AppError> {
 | Version | Date | Key Changes |
 |---------|------|-------------|
 | 0.7 | 2024 | Stable foundation |
-| 0.8 | Feb 2025 | Path syntax change `/{param}`, new serve API |
-| 0.8.6 | 2025 | Latest stable, 191M+ downloads |
+| **0.8.0** | **Jan 1, 2025** | **Path syntax change** `/{param}`, `Option<T>` extractor change, new serve API |
+| 0.8.x | 2025 | Latest stable, 22k+ GitHub stars, community favorite |
+| 0.9 | In Progress | Breaking changes on main branch |
 
-### Axum 0.8 Breaking Changes
+### Axum 0.8.0 Breaking Changes (January 2025)
 
-- Path parameters: `/:id` → `/{id}`
-- Server start: `axum::serve(listener, app)` is now standard
-- Improved error messages with `#[debug_handler]`
+**Path Parameter Syntax Changed**
+```rust
+// ❌ Old syntax (0.7 and earlier)
+.route("/users/:id", get(get_user))
+.route("/files/*path", get(get_file))
+
+// ✅ New syntax (0.8+)
+.route("/users/{id}", get(get_user))
+.route("/files/{*path}", get(get_file))
+
+// Escape literal braces with double braces
+.route("/json/{{key}}", get(literal_braces))  // matches "/json/{key}"
+```
+
+**Why the change:**
+- Old syntax didn't allow route definitions with leading `:` or `*` characters
+- New syntax matches `format!()` macro style
+- Aligns with OpenAPI path parameter format
+
+**Option<T> Extractor Behavior Changed**
+```rust
+// Before 0.8: Any rejection from T was silently turned into None
+
+// After 0.8: Option<T> requires T to implement OptionalFromRequestParts
+// This allows proper rejection handling while still being optional
+
+use axum::extract::OptionalPath;
+
+// For optional path parameters, use new dedicated extractor
+pub async fn handler(OptionalPath(id): OptionalPath<i32>) -> impl IntoResponse {
+    match id {
+        Some(id) => format!("ID: {}", id),
+        None => "No ID provided".to_string(),
+    }
+}
+```
+
+**axum-extra Feature Flags Now Required**
+```toml
+# Cargo.toml - features now require explicit opt-in
+[dependencies]
+axum-extra = { version = "0.10", features = [
+    "cached",           # Cached extractor
+    "handler",          # Handler utilities
+    "middleware",       # Middleware utilities
+    "optional-path",    # OptionalPath extractor
+    "routing",          # Routing utilities
+    "with-rejection",   # WithRejection extractor
+] }
+```
+
+**prost Dependency Upgraded**
+- prost upgraded to v0.14 for protobuf support
+
+**option_layer Response Body Type**
+- `option_layer` now maps Response body type to `axum::body::Body`
+
+### Axum Framework Position (2025-2026)
+
+- **Surpassed Rocket** as community favorite for new Rust projects
+- 22k+ GitHub stars — far ahead of other frameworks from same era
+- Tight Tokio ecosystem integration
+- Predicted: Full-stack Rust development with Leptos integration by mid-2025
+
+### What's Coming in 0.9
+
+- Currently on main branch (breaking changes)
+- Tighter Leptos framework integration
+- Enhanced server-side rendering capabilities
+- More beginner-friendly documentation
 
 ---
 
