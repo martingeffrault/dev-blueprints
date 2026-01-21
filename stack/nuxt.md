@@ -591,14 +591,118 @@ export function useFormat() {
 | 3.8 | 2024 | Nuxt 4 compatibility mode |
 | 3.9 | 2024 | Improved HMR, faster dev |
 | 3.10+ | 2025 | Route groups, better caching |
-| 4.0 | 2025 | New app/ directory structure |
+| **4.0 RC** | **July 2025** | **New app/ directory**, breaking changes |
+| 4.0 stable | 2025 (soon) | Production-ready release |
 
-### Nuxt 4 Changes
+### Nuxt 4 Breaking Changes
 
-- New `app/` directory structure (pages, components in app/)
-- Improved TypeScript support
-- Better error handling
-- Simplified configuration
+**New app/ Directory Structure:**
+```
+my-nuxt-app/
+├── app/                    # Client code (NEW!)
+│   ├── assets/
+│   ├── components/
+│   ├── composables/
+│   ├── layouts/
+│   ├── middleware/
+│   ├── pages/
+│   ├── plugins/
+│   ├── utils/
+│   ├── app.vue
+│   └── app.config.ts
+├── content/               # Nuxt Content
+├── public/
+├── shared/                # Code shared between app & server (NEW!)
+├── server/
+└── nuxt.config.ts
+```
+
+This clearly separates client/server boundaries and improves file watch performance.
+
+**useAsyncData/useFetch Return Type Change:**
+```typescript
+// ❌ OLD — null for initial/error state
+const { data } = await useFetch('/api/users');
+// data.value was null before data loaded
+
+// ✅ NEW — undefined for initial/error state
+const { data } = await useFetch('/api/users');
+// data.value is undefined before data loaded
+
+// Migration: Replace null checks with undefined checks
+if (data.value !== undefined) { ... }
+```
+
+**Other Breaking Changes:**
+- Nuxt 2 compatibility removed from @nuxt/kit
+- Removal of `window.__NUXT__` object
+- Directory index scanning changes
+- Deduplication of route metadata
+
+**Migration Tools:**
+```bash
+# Automated codemods for migration
+npx nuxi upgrade --force
+
+# Or use the Codemod team's tools
+npx @codemod.com/cli nuxt/4/migration
+```
+
+**Test Nuxt 4 Features Now:**
+```typescript
+// nuxt.config.ts
+export default defineNuxtConfig({
+  future: {
+    compatibilityVersion: 4,
+  },
+});
+```
+
+### Hydration Strategies (Performance)
+
+```vue
+<!-- hydrate-when: Only hydrate when condition met -->
+<LazyMyComponent hydrate-when="(idle)" />
+
+<!-- hydrate-after: Wait specified time before hydrating -->
+<LazyMyComponent hydrate-after="2000" />
+
+<!-- hydrate-on-idle: Hydrate when browser is idle -->
+<LazyMyComponent hydrate-on-idle />
+
+<!-- Never hydrate (static only) -->
+<LazyMyComponent :hydrate="false" />
+```
+
+**Best practices:**
+- `hydrate-when` — Components that might not need hydration
+- `hydrate-after` — Components that can wait
+- `hydrate-on-idle` — Non-critical interactive components
+- **Never use `hydrate-never` on interactive components**
+
+### Lazy Loading Components
+
+```vue
+<script setup>
+// Lazy prefix delays component loading
+const LazyHeavyComponent = defineAsyncComponent(() =>
+  import('~/components/HeavyComponent.vue')
+);
+</script>
+
+<template>
+  <!-- Only loads when needed -->
+  <LazyHeavyComponent v-if="showHeavy" />
+</template>
+```
+
+### Nuxt 4 Performance Tips
+
+1. **Choose rendering strategy per route** — SSR, SSG, ISR, SWR, or CSR
+2. **Use lazy components** — `Lazy` prefix for non-critical components
+3. **Hydration strategies** — Delay hydration for performance
+4. **Route rules** — Define per-route caching behavior
+5. **payload extraction** — Reduce JavaScript bundle size
 
 ---
 

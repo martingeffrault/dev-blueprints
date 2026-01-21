@@ -1,7 +1,7 @@
 # GraphQL (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: GraphQL spec, Apollo Server 5.x, Apollo Client 3.x
+> **Versions covered**: GraphQL September 2025 spec, Apollo Client 4.x, Apollo Server 5.x, Yoga 5.x
 > **Purpose**: Query language for APIs with type-safe data fetching
 
 ---
@@ -659,10 +659,207 @@ input CreatePostInput {
 
 | Feature | Date | Description |
 |---------|------|-------------|
-| Apollo Server 4 | 2022 | Standalone server |
-| Apollo Server 5 | 2024 | Dependency updates |
+| **GraphQL September 2025 Spec** | Sep 2025 | @oneOf directive official, Schema Coordinates |
+| **Apollo Client 4.0** | Sep 2025 | RxJS, 20-30% smaller bundles, opt-in features |
+| **Hive Gateway v2** | Oct 2025 | Open-source Federation router |
+| @defer/@stream | Stage 2 | Incremental delivery (experimental) |
 | Apollo MCP | 2025 | GraphQL for AI agents |
-| Federation 2 | 2024 | Improved supergraph |
+| Federation 2.9 | 2025 | Apollo Router requires v2 only |
+
+### GraphQL September 2025 Specification
+
+First spec update since October 2021! Key additions:
+
+**@oneOf Directive (Now Official):**
+```graphql
+# ✅ NEW — Mutually exclusive inputs with @oneOf
+input PetInput @oneOf {
+  cat: CatInput
+  dog: DogInput
+  fish: FishInput
+}
+
+type Mutation {
+  createPet(input: PetInput!): Pet!
+}
+```
+```graphql
+# Usage — Exactly ONE field must be provided
+mutation {
+  createPet(input: { cat: { name: "Whiskers" } }) {
+    id
+  }
+}
+```
+
+**Schema Coordinates:**
+```graphql
+# NEW — Stable identifiers for tooling
+# Query.user = the user field on Query type
+# User.name = the name field on User type
+
+# Used for: codegen, linting, PR comments, schema registries
+```
+
+**@defer/@stream (Stage 2 — Experimental):**
+```graphql
+# EXPERIMENTAL — Incremental delivery
+query GetPost($id: ID!) {
+  post(id: $id) {
+    title
+    content
+    # Defer non-critical data
+    comments @defer {
+      id
+      text
+      author { name }
+    }
+  }
+}
+```
+```typescript
+// Yoga/Apollo — Enable experimental support
+import { createYoga } from 'graphql-yoga';
+
+const yoga = createYoga({
+  schema,
+  // Yoga supports @defer/@stream natively
+});
+```
+
+### Apollo Client 4.0 Breaking Changes (September 2025)
+
+**Import Path Changes (Required):**
+```typescript
+// ❌ OLD — React hooks from main entry
+import { useQuery, useMutation } from '@apollo/client';
+
+// ✅ NEW — React hooks from /react
+import { useQuery, useMutation } from '@apollo/client/react';
+
+// Core client imports remain the same
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+```
+
+**Link Creator Functions → Classes:**
+```typescript
+// ❌ OLD — Function creators
+import { createHttpLink, createErrorLink } from '@apollo/client';
+const httpLink = createHttpLink({ uri: '/graphql' });
+
+// ✅ NEW — Classes
+import { HttpLink } from '@apollo/client';
+const httpLink = new HttpLink({ uri: '/graphql' });
+```
+
+**RxJS Now Required:**
+```bash
+# RxJS is now a peer dependency
+npm install rxjs
+```
+```typescript
+// Access RxJS operators for advanced use cases
+import { from } from 'rxjs';
+import { retry, catchError } from 'rxjs/operators';
+
+// Apollo Client observables are now RxJS Observables
+const observable = client.watchQuery({ query: GET_POSTS });
+```
+
+**ServerError Changes:**
+```typescript
+// ❌ OLD — result property (parsed JSON)
+catch (error) {
+  if (error instanceof ServerError) {
+    console.log(error.result); // Parsed JSON
+  }
+}
+
+// ✅ NEW — bodyText property (raw string)
+catch (error) {
+  if (error instanceof ServerError) {
+    console.log(error.bodyText); // Raw string body
+    const parsed = JSON.parse(error.bodyText); // Parse manually if needed
+  }
+}
+```
+
+**Opt-in Features (Smaller Bundles):**
+```typescript
+// ❌ OLD — Everything bundled by default
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+// ✅ NEW — Explicitly import features you need
+import { ApolloClient } from '@apollo/client/core';
+import { InMemoryCache } from '@apollo/client/cache';
+import { HttpLink } from '@apollo/client/link/http';
+import { LocalState } from '@apollo/client/local-state'; // Only if using @client
+
+// HTTP Link is NOT bundled by default anymore!
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link: new HttpLink({ uri: '/graphql' }), // Must import explicitly
+});
+```
+
+**Namespace Types:**
+```typescript
+// ✅ NEW — Types via namespaces
+import { useQuery } from '@apollo/client/react';
+
+// Options and Result types are attached to the hook
+const options: useQuery.Options<GetPostsQuery, GetPostsQueryVariables> = {
+  variables: { first: 10 },
+};
+
+function MyComponent() {
+  const result: useQuery.Result<GetPostsQuery> = useQuery(GET_POSTS, options);
+}
+```
+
+**Migration Codemod:**
+```bash
+# Automate 90% of migration
+npx @apollo/client-codemod-migrate-3-to-4 src
+```
+
+### Hive Gateway v2 (Open-Source Apollo Router Alternative)
+
+```typescript
+// Hive Gateway — Open-source Federation router
+import { createGateway } from '@graphql-hive/gateway';
+
+const gateway = createGateway({
+  supergraph: './supergraph.graphql',
+  // Or fetch from Hive
+  supergraph: {
+    type: 'hive',
+    endpoint: process.env.HIVE_CDN_ENDPOINT,
+    key: process.env.HIVE_CDN_KEY,
+  },
+});
+
+// Deploy anywhere: Node.js, Bun, Deno, Workers, etc.
+```
+
+### Apollo Federation v2 Only (Router v1.60+)
+
+```yaml
+# Apollo Router v1.60+ no longer supports Federation v1
+# Migrate subgraphs to Federation v2
+
+# ❌ OLD — Federation v1
+extend type Query {
+  product(id: ID!): Product
+}
+
+# ✅ NEW — Federation v2
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.0")
+
+type Query {
+  product(id: ID!): Product @shareable
+}
+```
 
 ---
 

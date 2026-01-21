@@ -1,7 +1,7 @@
 # Redis (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Redis 7.x
+> **Versions covered**: Redis 8.x, Valkey 8.x
 > **Purpose**: In-memory data store for caching, sessions, queues, and real-time data
 
 ---
@@ -468,10 +468,178 @@ const redis = new Redis({
 
 | Feature | Date | Description |
 |---------|------|-------------|
-| Redis 7.0 | 2022 | Functions, ACLv2, Sharded Pub/Sub |
+| **Redis 8.4** | Nov 2025 | FT.HYBRID hybrid search, 92% JSON memory savings |
+| **Redis 8.0** | May 2025 | Vector sets, JSON/TimeSeries built-in, BM25 default |
+| **Valkey 8.1** | Oct 2025 | 20% memory reduction, Swiss Tables |
+| **Valkey 8.0** | Sep 2024 | Multi-threaded I/O, ~3x throughput |
 | Redis 7.2 | 2023 | Triggers, improved cluster |
-| Redis Stack | 2024+ | JSON, Search, Graph, TimeSeries |
-| Valkey | 2024 | Open source Redis fork |
+
+### Redis vs Valkey — Choosing in 2025+
+
+**Background**: In 2024, Redis changed to dual-source-available licensing. Linux Foundation forked Redis 7.2.4 → **Valkey** (BSD 3-Clause, fully open-source).
+
+| Aspect | Redis 8.x | Valkey 8.x |
+|--------|-----------|------------|
+| License | RSALv2/SSPLv1 (source-available) | BSD 3-Clause (OSI open-source) |
+| Vendor | Redis Inc. | Linux Foundation |
+| Vector Search | Redis Query Engine | Not included (use RediSearch) |
+| JSON | Built-in | Not built-in (use RedisJSON) |
+| Multi-threading | I/O threads | Full async I/O (3x throughput) |
+| Memory | Standard | 20% more efficient (Swiss Tables) |
+| Cloud Default | Azure Cache | AWS ElastiCache (switched 2024) |
+
+**When to use Redis 8**: Need vector search, JSON, time series, AI use cases out-of-the-box.
+
+**When to use Valkey**: Need open-source license, better raw performance, AWS/Google Cloud.
+
+### Redis 8 Major Features
+
+**Vector Set (Beta) — AI/Semantic Search:**
+```bash
+# Create vector set with 3 dimensions
+VSET.CREATE products DIMENSIONS 3 DISTANCE cosine
+
+# Add vectors
+VSET.ADD products item:1 "[0.1, 0.2, 0.3]"
+VSET.ADD products item:2 "[0.4, 0.5, 0.6]"
+
+# KNN search
+VSET.SEARCH products "[0.1, 0.2, 0.35]" K 5
+```
+
+**FT.HYBRID — Combined Full-Text + Vector Search (8.4):**
+```bash
+# Hybrid search: semantic meaning + keyword match + geo filter
+FT.HYBRID products
+  VECTOR_QUERY "what is machine learning"
+  TEXT_QUERY "tutorial"
+  GEO_FILTER location -122.4 37.7 10 km
+  RETURN_SCORES
+  FUSION_METHOD RRF  # Reciprocal Rank Fusion
+```
+```typescript
+// Node.js example
+const results = await redis.call(
+  'FT.HYBRID', 'products',
+  'VECTOR_QUERY', embedding.join(' '),
+  'TEXT_QUERY', 'tutorial beginner',
+  'LIMIT', '0', '10'
+);
+```
+
+**Redis Query Engine (Built-in Search):**
+```bash
+# Create index on JSON documents
+FT.CREATE idx:users ON JSON PREFIX 1 user: SCHEMA
+  $.name AS name TEXT
+  $.email AS email TAG
+  $.age AS age NUMERIC
+  $.location AS location GEO
+  $.embedding AS embedding VECTOR HNSW 6 DIM 384 DISTANCE_METRIC COSINE
+
+# Search with BM25 scoring (new default in Redis 8)
+FT.SEARCH idx:users "@name:John @age:[25 35]" SCORER BM25
+```
+
+**JSON Memory Optimization (8.4):**
+```typescript
+// 92% more memory efficient for numeric arrays
+// 37% more memory efficient for short strings
+
+// Before Redis 8.4: Large memory footprint for embeddings
+await redis.call('JSON.SET', 'doc:1', '$', JSON.stringify({
+  embedding: [0.1, 0.2, 0.3, /* 384 dimensions */],
+  title: 'Short'
+}));
+
+// Redis 8.4: Vectors in JSON are now practical
+// Short strings (≤7 bytes) are inlined
+// Numeric arrays use optimized storage
+```
+
+### Redis 8 Breaking Changes
+
+**ACL Categories Expanded:**
+```bash
+# ❌ BREAKING — These ACLs now include more commands
+# +@read now includes FT.SEARCH, JSON.GET, TS.GET, etc.
+# +@write now includes JSON.SET, TS.ADD, etc.
+
+# ❌ OLD — This used to allow JSON.SET
+ACL SETUSER myuser +@all -@write
+
+# ✅ NEW — Must explicitly include JSON commands
+ACL SETUSER myuser +@all -@write +JSON.SET +JSON.GET
+```
+
+**BM25 Default Scoring:**
+```bash
+# ❌ OLD — TF-IDF was default
+FT.SEARCH idx "query"  # Used TF-IDF
+
+# ✅ NEW — BM25 is default (more accurate for text)
+FT.SEARCH idx "query"  # Uses BM25
+
+# To use old scoring:
+FT.SEARCH idx "query" SCORER TFIDF
+```
+
+**Query Engine Validation:**
+```bash
+# ❌ OLD — Invalid input returned empty results
+FT.SEARCH idx "@field:[invalid"  # Returned []
+
+# ✅ NEW — Invalid input returns errors
+FT.SEARCH idx "@field:[invalid"  # Returns error
+```
+
+**Deprecated Options:**
+```bash
+# ❌ DEPRECATED — Vector search options
+INITIAL_CAP  # Use default
+BLOCK_SIZE   # Use default
+
+# ❌ DEPRECATED — Dialects
+DIALECT 1, DIALECT 3, DIALECT 4  # Use DIALECT 2
+```
+
+### Valkey Migration Guide
+
+```typescript
+// Valkey is protocol-compatible — same client code works!
+import Redis from 'ioredis';
+
+// ✅ Just change the host
+const client = new Redis({
+  host: 'valkey.example.com',  // Was: redis.example.com
+  port: 6379,
+  password: process.env.VALKEY_PASSWORD,
+});
+
+// All commands work the same
+await client.set('key', 'value');
+await client.get('key');
+```
+
+**Migration Steps:**
+1. Ensure current Redis is 7.2.4 compatible
+2. Export data: `redis-cli --rdb dump.rdb`
+3. Import to Valkey: `valkey-cli --pipe < dump.rdb`
+4. Update client connection strings
+5. Test thoroughly before production cutover
+
+**Valkey Performance Tuning:**
+```bash
+# Enable multi-threaded I/O (Valkey's killer feature)
+# valkey.conf
+io-threads 6              # Match CPU cores
+io-threads-do-reads yes   # Enable for reads too
+
+# Results: ~240K → ~680K RPS (3x throughput)
+# p99 latency: 1.68ms → 0.93ms
+```
+
+**Note**: Redis Stack modules (RedisJSON, RediSearch) are NOT open-source and don't work with Valkey. Use community alternatives or consider Redis 8 if you need these features.
 
 ---
 

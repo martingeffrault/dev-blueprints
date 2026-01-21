@@ -1,7 +1,7 @@
 # Electron (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Electron 32+
+> **Versions covered**: Electron 33-40+
 > **Purpose**: Cross-platform desktop apps with web technologies (Chromium + Node.js)
 
 ---
@@ -667,9 +667,128 @@ app.on('web-contents-created', (_, contents) => {
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 32.0 | Aug 2025 | Chromium 128, Node.js 20.16, V8 12.8 |
-| 31.0 | May 2025 | Performance improvements, security fixes |
-| 30.0 | Feb 2025 | New APIs, Chromium 126 |
+| **40.0** | Jan 2026 | Clipboard API deprecated in renderer, macOS dSYM compression changed |
+| **39.0** | Dec 2025 | window.open popups resizable by default, `--host-rules` deprecated |
+| **38.0** | Nov 2025 | macOS 11 dropped, plugin-crashed event removed |
+| **37.0** | Oct 2025 | Utility process behavior changes, WebUSB/Serial blocklists |
+| **36.0** | Sep 2025 | GTK 4 default on GNOME, Session extension methods deprecated |
+| **35.0** | Aug 2025 | Chromium 134, Node 22.14, Service Worker preload scripts |
+| 34.0 | Jun 2025 | Menu bar hidden in fullscreen on Windows |
+| 33.0 | Apr 2025 | Chromium 130, document.execCommand("paste") deprecated |
+
+### Electron 35+ Major Breaking Changes
+
+**BrowserView → WebContentsView Migration (Required):**
+```typescript
+// ❌ OLD — BrowserView deprecated since v30, removed in v35+
+const view = new BrowserView();
+win.setBrowserView(view);
+win.addBrowserView(view);
+view.webContents.loadURL('https://example.com');
+
+// ✅ NEW — WebContentsView
+import { WebContentsView, BaseWindow } from 'electron';
+
+const win = new BaseWindow({ width: 800, height: 600 });
+const view = new WebContentsView();
+win.contentView.addChildView(view);
+view.setBounds({ x: 0, y: 0, width: 800, height: 600 });
+view.webContents.loadURL('https://example.com');
+```
+
+**Service Worker Preload Scripts (v35+):**
+```typescript
+// NEW — Attach preload to Service Workers (great for Manifest V3 extensions)
+session.defaultSession.registerPreloadScript({
+  id: 'my-service-worker-preload',
+  type: 'service-worker', // or 'frame' for regular preloads
+  filePath: path.join(__dirname, 'sw-preload.js'),
+});
+```
+
+**Clipboard API Changes (v40):**
+```typescript
+// ❌ OLD — Direct clipboard in renderer deprecated
+import { clipboard } from 'electron';
+const text = clipboard.readText(); // Deprecated in v40!
+
+// ✅ NEW — Use contextBridge in preload
+// preload.ts
+contextBridge.exposeInMainWorld('clipboard', {
+  readText: () => clipboard.readText(),
+  writeText: (text: string) => clipboard.writeText(text),
+});
+```
+
+**document.execCommand("paste") Deprecated (v33):**
+```typescript
+// ❌ OLD — Synchronous clipboard read
+document.execCommand("paste"); // Deprecated!
+
+// ✅ NEW — Async Clipboard API
+const text = await navigator.clipboard.readText();
+```
+
+**macOS Version Requirements:**
+- **Electron 33+**: macOS 11 (Big Sur) minimum
+- **Electron 38+**: macOS 12 (Monterey) minimum
+
+**C++20 Required for Native Modules (v33+):**
+```json
+// binding.gyp — Update for native modules
+{
+  "targets": [{
+    "cflags_cc": ["-std=c++20"],
+    "xcode_settings": {
+      "CLANG_CXX_LANGUAGE_STANDARD": "c++20"
+    }
+  }]
+}
+```
+
+**GTK 4 Default on GNOME (v36+):**
+```bash
+# Override if needed
+electron --gtk-version=3 your-app.js
+```
+
+**Session Extension Management (v36+):**
+```typescript
+// ❌ OLD — Direct session methods deprecated
+session.defaultSession.loadExtension(path);
+session.defaultSession.removeExtension(extensionId);
+
+// ✅ NEW — Use session.extensions
+const ext = await session.defaultSession.extensions.loadExtension(path);
+session.defaultSession.extensions.removeExtension(extensionId);
+
+// New events
+session.defaultSession.extensions.on('extension-loaded', (event, extension) => {});
+session.defaultSession.extensions.on('extension-unloaded', (event, extension) => {});
+```
+
+**WebRequestFilter URLs (v35+):**
+```typescript
+// ❌ OLD — Empty array matched all URLs
+session.defaultSession.webRequest.onBeforeRequest({ urls: [] }, handler);
+
+// ✅ NEW — Use explicit pattern
+session.defaultSession.webRequest.onBeforeRequest({ urls: ['<all_urls>'] }, handler);
+```
+
+**window.open Popups Resizable (v39+):**
+```typescript
+// NEW behavior: All popups are resizable by default
+// To override:
+mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+  return {
+    action: 'allow',
+    overrideBrowserWindowOptions: {
+      resizable: false, // Explicitly disable if needed
+    },
+  };
+});
+```
 
 ### Recent Security Focus
 
