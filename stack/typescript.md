@@ -321,15 +321,53 @@ if (value == null) { } // Actually fine for null/undefined specifically
 | - | Jul 2025 | Node.js 22.18+ native TypeScript support unflagged |
 | - | 2025 | TypeScript compiler rewrite in Go announced (10x performance) |
 
+### TypeScript 5.5 Highlights (Blockbuster Release)
+
+**Inferred Type Predicates** — Auto-infers type guards from filter functions:
+```typescript
+// Before 5.5: Manual predicate required
+const filtered = [1, null, 2].filter((x): x is number => x !== null);
+
+// After 5.5: TypeScript auto-infers the predicate!
+const filtered = [1, null, 2].filter(x => x !== null);
+// Type: number[] (not (number | null)[])
+```
+
+**Isolated Declarations** — Critical for large monorepos:
+```json
+{
+  "compilerOptions": {
+    "isolatedDeclarations": true
+  }
+}
+```
+- Exports must have explicit return types
+- Enables parallel .d.ts generation without full type-checking
+- Massive build time improvements in monorepos
+
+### TypeScript 5.7 Highlights
+
+**Node.js 22 Compile Cache** — 2.5x faster tool startup:
+```bash
+# Enabled via Node.js 22+ module.enableCompileCache()
+```
+
+**Never-initialized Variable Checks**:
+```typescript
+let value: string;
+function setup() { value = "init"; }
+console.log(value); // Error: used before assignment
+```
+
 ### TypeScript 5.8 Highlights
 
-**`--erasableSyntaxOnly`**: Ensures code is compatible with Node.js direct execution:
+**`--erasableSyntaxOnly`**: Ensures code works with Node.js direct execution:
 ```bash
 node --experimental-strip-types app.ts
 ```
-Errors on constructs like `enum` and `namespace` that can't be stripped.
+Errors on `enum` and `namespace` that can't be stripped.
 
-**Better Monorepo Support**: Improved tsconfig.json resolution in nested projects.
+**Better Monorepo Support**: Improved tsconfig.json resolution.
 
 ---
 
