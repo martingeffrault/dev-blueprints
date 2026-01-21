@@ -1,7 +1,7 @@
 # FastAPI (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 0.110+
+> **Versions covered**: 0.110–0.125+
 > **Purpose**: Modern, fast Python web framework for building APIs
 
 ---
@@ -523,11 +523,48 @@ async def process_data(data: LargeData):
 | 0.100+ | Jul 2023 | Pydantic v2 full support (5-50x faster validation) |
 | 0.109+ | Nov 2024 | Dropped Pydantic v1 support, minimum `pydantic >=2.7.0` |
 | 0.115+ | 2025 | Python 3.14 support, performance improvements |
-| 2025 | Trend | Mainstream for ML/LLM serving, data platforms |
+| 0.124.4 | 2025 | Last version supporting Python 3.8 |
+| 0.125+ | 2025 | Python 3.9+ required, internal syntax modernized |
+| 2025-26 | Trend | Mainstream for ML/LLM/agentic AI serving, data platforms |
 
-### Key Migration Notes (2025)
+### Key 2025-2026 Updates
 
-**Pydantic v1 Deprecated** — FastAPI now requires Pydantic v2:
+**Python Version Changes**
+- **Python 3.8 dropped** — Installers refuse to install latest FastAPI on 3.8 (max 0.124.4)
+- **Python 3.9+ required** — Internal syntax upgraded to 3.9+ features
+- **Python 3.14 supported** — Full compatibility with latest Python
+
+**Pydantic v1 Removal Imminent**
+- Pydantic v1 support is **deprecated and will be removed soon**
+- Pydantic team stopped supporting v1 for Python 3.14+
+- Migration helper: `from pydantic.v1 import BaseModel` for gradual transition
+- Compatibility ensured with Pydantic 2.12.0+
+
+**FastAPI Cloud Deployment**
+```bash
+# Install with cloud CLI
+pip install "fastapi-cli[standard]"
+
+# Deploy to FastAPI Cloud
+fastapi deploy
+```
+
+**Bug Fixes (2025)**
+- Fixed optional sequence handling with Python 3.10+ union syntax
+- Fixed tagged discriminated union not recognized as body field
+- Fixed OpenAPI schema for computed fields with `separate_input_output_schemas=False`
+- Fixed Query/Header/Cookie parameter model alias
+- Fixed security schemes in OpenAPI at top-level app
+
+**AI/ML Ecosystem Dominance (2025-2026)**
+- Default choice for RAG backends, AI orchestration layers
+- Async-first design handles concurrent LLM API calls efficiently
+- High-throughput data API standard for ML pipelines
+- Tight Pydantic v2 integration for typed models and generics
+
+### Key Migration Notes
+
+**Pydantic v1 → v2 Required**:
 ```python
 # Before (v1 style) - NO LONGER WORKS
 class User(BaseModel):
@@ -555,6 +592,12 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 ```
+
+**Recommended Setup (2026)**
+- Python 3.12+ (ideally 3.12 for stability, 3.13-3.14 for cutting edge)
+- Pydantic 2.12+
+- Uvicorn as ASGI server
+- Virtual environment isolation
 
 ---
 

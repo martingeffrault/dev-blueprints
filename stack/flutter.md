@@ -1,7 +1,7 @@
 # Flutter & Dart (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: Flutter 3.32+, Dart 3.8+
+> **Versions covered**: Flutter 3.32–3.38+, Dart 3.8–3.10+
 > **Purpose**: Cross-platform mobile, web, and desktop development with native performance
 
 ---
@@ -1487,35 +1487,68 @@ class ProductCard extends ConsumerWidget {
 |---------|------|-------------|
 | Flutter 3.32 | May 2025 | Web hot reload, Cupertino squircles, Firebase AI integrations |
 | Dart 3.8 | May 2025 | Performance improvements, analysis server enhancements |
-| Flutter 3.35 | Aug 2025 | Accessibility improvements, analysis performance (2s for large projects) |
-| Dart 3.9 | Aug 2025 | MCP Server, AOT-compiled analysis server (50% faster) |
-| Flutter 3.38 | Nov 2025 | Impeller default on Android, GenUI SDK, iOS 26 support |
-| Dart 3.10 | Nov 2025 | Dot shorthands, stable build hooks, analyzer plugins |
+| Flutter 3.35 | Aug 2025 | Accessibility improvements, analysis performance (2s for large projects), Wasm dry-run builds |
+| Dart 3.9 | Aug 2025 | MCP Server for AI assistants, AOT-compiled analysis server (50% faster) |
+| Flutter 3.38 | Nov 2025 | Impeller default on Android API 29+, GenUI SDK, iOS 26 support, 16KB page size |
+| Dart 3.10 | Nov 2025 | Dot shorthands syntax, stable build hooks, native analyzer plugins API |
+| Flutter 4.0 | 2026 (Expected) | Impeller 2.0 Rendering Engine, Dart 4.x integration, framework restructure |
 
-### Key 2025 Highlights
+### Key 2025-2026 Highlights
 
-**Impeller Default on Android**
-- Default rendering engine on iOS since 3.29, Android API 29+ since 3.38
+**Impeller Default on Android (Flutter 3.38)**
+- Default rendering engine on iOS since 3.29, Android API 29+ with Vulkan since 3.38
 - 50% faster frame rasterization, consistent 120 FPS on high-refresh displays
 - Eliminates shader compilation jank with precompiled shaders
 
-**Dart Macros Cancelled**
+**Android 16KB Memory Page Size (CRITICAL)**
+- **Google Play deadline: November 1, 2025** — Apps targeting Android 15 must support 16KB pages
+- Apps not compliant will be rejected from the Play Store
+- Flutter 3.38+ handles this automatically for new builds
+
+**Dart 3.10: Dot Shorthands Syntax**
+```dart
+// Before
+Color color = Color.blue;
+
+// After (Dart 3.10+) - Dot shorthands
+Color color = .blue;  // Type inferred from context
+```
+
+**Dart Macros Cancelled, Augmentations Instead**
 - Dart team cancelled macros due to Hot Reload performance concerns
 - Instead: `augment` keyword for splitting class definitions across files
-- Foundation for better code generation tools
+- Foundation for better code generation tools without compilation overhead
+
+**Stable Build Hooks (Dart 3.10)**
+- Game-changer for packages compiling/bundling native code (C, C++, Rust, Go)
+- Enables seamless integration of native dependencies
+
+**Native Analyzer Plugins API (Dart 3.10)**
+- Write custom static analysis rules integrated directly into the Dart analyzer
+- Rules run in IDE just like built-in lints
+
+**WebAssembly Progress**
+- Wasm becoming default compilation target for Flutter web
+- Flutter 3.35 introduced `--wasm-dry-run` flag for preparation
+- Significant performance improvements over JavaScript compilation
+
+**Dart & Flutter MCP Server (Dart 3.9)**
+- Bridge between IDE, CLI, codebase, and AI assistants
+- Enables AI-powered development workflows
 
 **FFIgen and JNIgen Early Access**
 - Codegen solutions to simplify native platform API access
 - Aims to replace method channels with direct Dart-to-native bridging
 
-**Web Hot Reload**
-- Flutter 3.32 introduced hot reload for web development
+**Web Hot Reload (Flutter 3.32)**
+- Hot reload now works for web development
 - Config file support for `flutter run` on web
 
-**Material and Cupertino Separation**
+**Material and Cupertino Package Separation (2026)**
 - Widgets being moved to separate packages
-- Core framework will support platform-agnostic widgets
-- Platform-specific widgets maintained separately
+- Core framework will support platform-agnostic widgets only
+- Platform-specific widgets (Material, Cupertino) maintained separately
+- Part of Flutter 4.0 restructure
 
 **Riverpod 3.0**
 - Code generation improvements

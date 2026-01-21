@@ -1,7 +1,7 @@
 # React Native & Expo (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: React Native 0.76+, Expo SDK 52+
+> **Versions covered**: React Native 0.76–0.82+, Expo SDK 52–54+
 > **Purpose**: Cross-platform mobile development with native performance
 
 ---
@@ -870,18 +870,53 @@ const styles = StyleSheet.create({
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| RN 0.76 | Nov 2024 | New Architecture default |
+| RN 0.76 | Nov 2024 | New Architecture becomes default |
+| RN 0.77 | Jan 2025 | CSS improvements (`display: contents`, `boxSizing`, `mixBlendMode`), Swift AppDelegate |
+| RN 0.78 | Feb 2025 | **React 19 support**, React Compiler simplified setup |
+| RN 0.81 | Mid 2025 | Last version supporting Legacy Architecture |
+| **RN 0.82** | **Oct 2025** | **New Architecture ONLY** — Legacy removed, Hermes V1 opt-in |
 | Expo SDK 52 | Jan 2025 | New Architecture 75% adoption |
+| Expo SDK 54 | 2025 | Last SDK with Legacy Architecture support |
 | Expo Router 4 | 2025 | API routes, typed routes |
-| Fabric | 2024-25 | New rendering engine |
 
-### Key Updates
+### Key 2025-2026 Updates
 
-- **New Architecture default** — Legacy may be removed late 2025
-- **Expo Router** — File-based routing standard
-- **React 19 features** — Use hook, Server Components experimentation
-- **Hermes default** — JavaScript engine for both platforms
-- **EAS Update** — OTA updates without app store review
+**React Native 0.82: "A New Era" (October 2025)**
+- **Legacy Architecture completely removed** — Migrate to 0.81/Expo SDK 54 first if not on New Architecture
+- **Hermes V1** available as opt-in — improved compiler and VM performance
+- Marks the completion of 6+ years of New Architecture development
+
+**New Architecture Performance Gains (Benchmarks)**
+- Cold start times: **43% faster** (1,800ms vs 3,200ms on mid-range Android)
+- Animation frame times: **11ms vs 18ms** for complex UIs
+- Memory usage: **20-30% reduction**
+- Rendering: **39% faster** on iPhone 12 Pro for component-heavy screens
+
+**React 19 in React Native (0.78+)**
+- Full React 19 support with `use` hook
+- React Compiler enabled with simplified configuration
+- Better performance with less manual optimization (no more `useMemo` everywhere)
+
+**TurboModules & Fabric**
+- **TurboModules**: Lazy loading of native modules — modules load only when needed
+- **Fabric**: Synchronous UI updates, fine-grained rendering control, faster layout calculations
+- No more UI blocking from JS thread
+
+**Android 15 Compliance (Critical)**
+- Apps must support edge-to-edge display
+- **16KB memory page size** support required for Google Play (Nov 2025 deadline)
+- RN 0.77+ handles preparation automatically
+
+**What's Coming in 2026**
+- **Static Hermes maturation** — Compiling JavaScript to native code at build time
+- **React Server Components exploration** — Experiments for reducing client bundle sizes
+- **Faster build times** — Callstack and Meta actively working on compilation speed
+- **Out-of-tree platform alignment** — Windows, macOS, tvOS aligning with New Architecture
+
+**Migration Urgency**
+- 75% of Expo SDK 52+ projects already on New Architecture
+- Starting 2026, most community packages will **drop Legacy Architecture support**
+- Shopify successfully migrated apps serving millions while maintaining weekly releases
 
 ---
 

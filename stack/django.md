@@ -1,7 +1,7 @@
 # Django (2025)
 
 > **Last updated**: January 2026
-> **Versions covered**: 5.0, 5.1, 5.2 LTS
+> **Versions covered**: 5.0, 5.1, 5.2 LTS (supported until April 2028)
 > **Purpose**: High-level Python web framework for rapid development
 
 ---
@@ -618,20 +618,48 @@ def queue_email_task(sender, instance, **kwargs):
 | 5.0 | Dec 2023 | Field groups (`as_field_group`), database-computed default values, `GeneratedField` |
 | 5.1 | Aug 2024 | Async auth backends, `@login_required` for async views, querystring template tag |
 | **5.2 LTS** | **Apr 2025** | **Composite primary keys**, shell auto-imports, async user/permission methods, `utf8mb4` MySQL default |
+| 5.2.8 | Late 2025 | Python 3.14 support added |
+| 6.0 | Expected 2026 | Next major release |
+
+### Support Timeline (Important)
+
+| Version | Support Until | Notes |
+|---------|---------------|-------|
+| Django 4.2 LTS | **April 2026** | Upgrade to 5.2 LTS before this |
+| Django 5.1 | **December 2025** | Security/data loss fixes only |
+| **Django 5.2 LTS** | **April 2028** | Current recommended version |
 
 ### Django 5.2 LTS Highlights (Supported until April 2028)
 
-**Composite Primary Keys:**
+**Composite Primary Keys (Long-Awaited Feature):**
 ```python
-pk = models.CompositePrimaryKey('order_id', 'product_id')
+from django.db import models
+
+class OrderItem(models.Model):
+    pk = models.CompositePrimaryKey('order_id', 'product_id')
+    order = models.ForeignKey('Order', on_delete=models.CASCADE)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+
+# Usage
+item = OrderItem.objects.get(pk=(order_id, product_id))
 ```
 
-**Shell Auto-imports:**
+**Limitations of Composite PKs:**
+- Cannot migrate to/from composite PK (hard in plain SQL anyway)
+- Relationship fields (FK, O2O, M2M, GenericFK) cannot point to composite PK models
+- Django admin does not support composite PKs
+- Workaround: Use `ForeignObject` internal API for relationships
+
+**Shell Auto-imports (DX Boost):**
 ```bash
 python manage.py shell
-# Models from all installed apps are auto-imported!
+# Models from ALL installed apps are auto-imported!
 >>> Post.objects.count()  # No import needed
+>>> User.objects.filter(is_active=True)  # Just works
 ```
+- Inspired by `django-extensions` shell_plus
+- Now built into Django core
 
 **Async Auth Methods:**
 ```python
@@ -641,7 +669,31 @@ has_perm = await user.ahas_perm('blog.add_post')
 groups = [g async for g in user.groups.all()]
 ```
 
-**Python Support:** 3.10, 3.11, 3.12, 3.13, 3.14
+**Customizable Form Rendering (BoundField):**
+```python
+# Specify custom BoundField at three levels:
+# 1. Project Level (settings)
+# 2. Form Level
+# 3. Field Level
+class MyForm(forms.Form):
+    title = forms.CharField(
+        bound_field_class=CustomBoundField
+    )
+```
+
+**Database Changes:**
+- PostgreSQL 13 support ends November 2025 → **PostgreSQL 14+ required**
+- MySQL connections now default to **utf8mb4** (not deprecated utf8mb3)
+- `response.text` returns string representation of body
+- `HttpRequest.accepted_types` sorted by client preference
+- `QuerySet.values()/values_list()` maintains specified field order
+
+**Python Support:** 3.10, 3.11, 3.12, 3.13, 3.14 (as of 5.2.8)
+
+### Community Events 2026
+
+- **DjangoCon Europe 2026**: April 15, 2026 — Athens, Greece
+- **DjangoCon US 2026**: September 14, 2026 — Chicago, Illinois, USA
 
 ---
 
