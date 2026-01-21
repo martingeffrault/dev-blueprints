@@ -858,30 +858,36 @@ screen.getByTestId('chart-container');
 | 29.0 | Aug 2022 | Node 14.15+ required, jsdom 20, new snapshot format |
 | 29.5 | Apr 2023 | `jest.mocked()` improvements, better TypeScript support |
 | 29.7 | Sep 2023 | Performance improvements, bug fixes |
-| 30.0 | Jun 2025 | **Major release**: Node 18+ required, TypeScript 5.4+, 37% faster, 77% lower memory |
-| 30.x | 2025-2026 | `expect.arrayOf`, `advanceTimersToNextFrame()`, Error cause in snapshots |
+| 30.0 | Jun 2025 | **Major release**: Node 18+ required, TypeScript 5.4+, up to 20% faster |
+| 30.x | 2025-2026 | `expect.arrayOf`, `advanceTimersToFrame()`, Error cause in snapshots |
 
 ### Jest 30 Highlights (June 2025)
 
+Jest 30 is one of the largest major releases ever, after three years of development.
+
 **Performance Improvements:**
-- 37% faster test execution in large codebases
-- 77% lower memory usage
-- New `unrs-resolver` for faster module resolution
+- Up to **20% faster** test runs
+- Improved memory leaks detection
+- JSDOM 22, TypeScript 5, Prettier 3 support
+- Native `.mts` and `.cts` file support by default
 
 **Breaking Changes:**
 - Node 14, 16, 19, 21 support dropped (Node 18+ required)
-- TypeScript 5.4+ required
-- jsdom upgraded from 21 to 26
+- TypeScript 5.4+ minimum required
+- jsdom upgraded to version 22
 - `jest.genMockFromModule()` removed (use `jest.createMockFromModule()`)
 - `--testPathPattern` renamed to `--testPathPatterns`
+- Various `expect` aliases removed
+- `jest-repl` package removed and deprecated
+- Custom `isBuiltinModule` replaced with Node's `isBuiltin`
 
 **New Features:**
 ```typescript
-// New expect.arrayOf matcher
+// New expect.arrayOf (ArrayOf) asymmetric matcher
 expect([1, 2, 3]).toEqual(expect.arrayOf(expect.any(Number)));
 
 // Advance timers to next animation frame
-jest.advanceTimersToNextFrame();
+jest.advanceTimersToFrame();
 
 // Error cause now included in snapshots
 const error = new Error('Failed', { cause: new Error('Network') });
@@ -889,6 +895,15 @@ expect(error).toMatchSnapshot(); // Includes cause
 
 // Async timer advancement
 await jest.advanceTimersByTimeAsync(1000);
+
+// NEW: import.meta support (Node 20.11+)
+// import.meta.filename and import.meta.dirname now supported
+// import.meta.resolve also available
+
+// NEW: unstable_unmockModule for ESM
+jest.unstable_unmockModule('module-name');
+
+// NEW: onGenerateMock transformer callback for auto-generated mocks
 ```
 
 **Migration from Jest 29:**

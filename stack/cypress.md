@@ -730,6 +730,32 @@ cy.mount(MyComponent);
 **Chrome 137+ Warning:**
 Chrome 137+ no longer supports `--load-extension` in branded Chrome. Use Electron, Chrome for Testing, or Chromium for `@cypress/puppeteer`.
 
+### Cypress 14.3+ Additional Features (2025)
+
+**Selector Playground for All Users:**
+After feedback on its usefulness, the Selector Playground is now available for all users in open mode (previously Studio-only).
+
+**experimentalFastVisibility:**
+```typescript
+// cypress.config.ts
+export default defineConfig({
+  experimentalFastVisibility: true, // Faster visibility checks
+});
+```
+
+**Performance Improvements:**
+- Significantly faster element highlighting when viewing command snapshots
+- Reduced redundant style calculations
+- Batched DOM operations to minimize browser reflows
+
+**Security Updates (2025):**
+- CVE-2025-15284 fixed via @cypress/request upgrade
+- CVE-2025-68154 fixed via systeminformation upgrade
+- CVE-2025-5889 fixed via brace-expansion upgrade
+
+**Windows ARM64 Support:**
+Cypress now installs win32-x64 binary on Windows win32-arm64 systems and runs in emulation.
+
 ---
 
 ## Resources

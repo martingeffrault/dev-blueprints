@@ -786,6 +786,7 @@ export const IconButton: Story = {
 | 8.4 | Oct 2024 | ESM/CJS compatibility, test panel improvements |
 | 8.5 | Jan 2025 | Realtime a11y tests, code coverage, focused tests, RN Web Vite |
 | 8.6 | Feb 2025 | Storybook Test enhancements, a11y vision filter lock |
+| **9.0** | **Jun 2025** | **Vitest collab, 48% leaner, story globals, React Native Web** |
 | 10.0 | Nov 2025 | CSF Factories (preview), ESM-only, 29% smaller, module automocking |
 
 ### Storybook 8.5 Highlights
@@ -807,6 +808,42 @@ export const IconButton: Story = {
 # Right-click a story in sidebar -> "Run tests"
 # Or use the test panel to filter
 ```
+
+### Storybook 9 Highlights (June 2025)
+
+Storybook 9 is a huge release focused on testing and bundle size.
+
+**Core Improvements:**
+- **48% leaner bundle size** through flatter dependency structure
+- Interaction tests with Vitest collaboration
+- Accessibility tests (built-in)
+- Visual tests
+- Coverage reports
+- Story generation
+
+**Story Globals:**
+```typescript
+// v9: Assign global parameters per individual story
+export const DarkTheme: Story = {
+  globals: {
+    theme: 'dark',
+    viewport: 'mobile',
+    locale: 'es-ES',
+  },
+};
+```
+
+**Tag-Based Organization:**
+Stories can now use tags for better filtering and organization.
+
+**Framework Support in v9:**
+- Next.js + Vite: Zero-config support, smoother than ever
+- Svelte 5: Full support including runes, #snippet, new compiler directives
+- React Native: Full-featured web interface and device testing support
+- Angular 18, Lit 3, Vue 3.4+ with latest internals
+
+**Vitest 3 Integration:**
+Addon Test now includes Vitest 3 support. `@vitest/coverage-v8` is added during postinstall if no coverage reporter is installed.
 
 ### Storybook 10 Preview Features
 

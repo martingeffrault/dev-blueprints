@@ -511,13 +511,57 @@ RETURNING *;  -- NEW in PG17
 - Optimizer can now leverage statistics from earlier parts of CTEs
 - Better query plans for complex UNION queries
 
-### PostgreSQL 18 (2025)
+### PostgreSQL 18 (September 2025)
 
-PostgreSQL 18 was released in 2025 with:
-- Further performance improvements
+PostgreSQL 18 was officially released in September 2025 with major performance and developer experience improvements.
+
+**New I/O Subsystem:**
+- Up to **3x performance improvement** when reading from storage
+- More queries can now use indexes effectively
 - Enhanced streaming I/O for sequential reads
-- Improved write throughput under high concurrency
-- WAL processing improvements (2x concurrent transaction handling)
+
+**Major-Version Upgrade Improvements:**
+- Faster upgrade times
+- Reduced time to reach expected performance after upgrade completion
+
+**Virtual Generated Columns:**
+```sql
+-- NEW in PG18: Virtual columns compute values at query time (not stored)
+CREATE TABLE products (
+    id uuid PRIMARY KEY,
+    price numeric,
+    tax_rate numeric,
+    -- Virtual generated column - computed on query, not stored
+    total_price numeric GENERATED ALWAYS AS (price * (1 + tax_rate)) VIRTUAL
+);
+```
+
+**UUIDv7 Native Support:**
+```sql
+-- NEW in PG18: Native uuidv7() function for time-ordered UUIDs
+-- Better indexing and read performance than v4
+INSERT INTO events (id) VALUES (uuidv7());
+```
+
+**Data Checksums by Default:**
+```bash
+# NEW in PG18: initdb now enables checksums by default
+initdb -D /data
+
+# To disable (for upgrading non-checksum clusters)
+initdb -D /data --no-data-checksums
+```
+
+**Optimizer Improvements:**
+- Automatic removal of unnecessary table self-joins (`enable_self_join_elimination`)
+- `IN (VALUES ...)` converted to `x = ANY` for better statistics
+- OR-clauses transformed to arrays for faster index processing
+- Faster INTERSECT, EXCEPT, window aggregates, and view column aliases
+
+**Latest Minor Releases (November 2025):**
+- PostgreSQL 18.1, 17.7, 16.11, 15.15, 14.20, 13.23 released
+- Fixes 2 security vulnerabilities and 50+ bugs
+- **PostgreSQL 13 is now EOL** - upgrade to a supported version
 
 ---
 

@@ -903,6 +903,31 @@ res.status(500).json({ error: 'Server error' });
 | 5.0.0 | Oct 2024 | Major release: async/await support, path-to-regexp v8, Node 18+ |
 | 5.0.1 | Nov 2024 | Bug fixes, improved TypeScript types |
 | 5.1.0 | Mar 2025 | Default on npm, Uint8Array support in `res.send()`, Brotli compression |
+| 5.x | 2025 | Ongoing security patches and improvements |
+| **6.0** | **TBD** | **Earliest possible: Oct 2025** (work not yet started) |
+
+### LTS Timeline
+
+Express v5 follows a formal LTS policy:
+- **CURRENT**: Available but not latest (minimum 3 months)
+- **ACTIVE**: Tagged `latest` on npm (minimum 12 months from Mar 2025)
+- **MAINTENANCE**: 12 months after v6 becomes ACTIVE
+- **EOL**: 6 months after maintenance period ends
+
+**Partnership with HeroDevs**: For companies unable to upgrade from v4, HeroDevs will provide extended support after v4 EOL.
+
+### Migration from Express 4
+
+A codemod package was developed to automate Express 4 to 5 migration:
+
+```bash
+# Run the migration codemod
+npx @expressjs/codemod@latest express-5
+
+# Manual changes still required for:
+# - Path route matching syntax (e.g., :param? → {/:param})
+# - Regex patterns in routes (removed for ReDoS protection)
+```
 
 ### Breaking Changes from Express 4
 
