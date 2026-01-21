@@ -422,21 +422,155 @@ if (!result.success) {
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 3.23 | 2024 | Improved error messages, better TypeScript inference |
-| 4.0 beta | 2025 | Unified `error` param (replaces separate `message`/`errorMap`) |
-| 4.0 beta | 2025 | `$ZodType` interface for library authors |
-| 4.0 beta | 2025 | Performance improvements |
+| **4.0** | Jul 2025 | 14x faster parsing, 57% smaller, Zod Mini, string format top-level |
+| 3.24 | 2024 | Last v3 release |
 
-### Zod 4 Changes (Beta)
+### Zod 4 Breaking Changes
 
+**Performance:**
+- **14x** faster string parsing
+- **7x** faster array parsing
+- **6.5x** faster object parsing
+- **57% smaller** bundle size
+
+**String Format Validators → Top-Level Functions:**
 ```typescript
-// Zod 3 — Separate message and errorMap
-z.string().min(5, { message: 'Too short' });
+// ❌ OLD — Method chaining
+z.string().email()
+z.string().uuid()
+z.string().url()
+z.string().datetime()
+z.string().ip()
 
-// Zod 4 — Unified error param
+// ✅ NEW — Top-level functions
+z.email()
+z.uuid()     // Strict RFC 9562/4122 validation (variant bits = 10)
+z.guid()     // Permissive UUID-like (use if z.uuid() too strict)
+z.url()
+z.iso.datetime()
+z.ipv4()     // Replaces ip() for IPv4
+z.ipv6()     // Replaces ip() for IPv6
+```
+
+**UUID Validation Stricter:**
+```typescript
+// ❌ OLD — Permissive
+z.string().uuid().parse('00000000-0000-0000-0000-000000000000'); // OK
+
+// ✅ NEW — RFC compliant (variant bits must be 10)
+z.uuid().parse('00000000-0000-0000-0000-000000000000'); // Error!
+z.guid().parse('00000000-0000-0000-0000-000000000000'); // OK (permissive)
+```
+
+**IP Address Validation:**
+```typescript
+// ❌ OLD — Combined ip()
+z.string().ip()
+
+// ✅ NEW — Separate methods, uses new URL() internally (more robust)
+z.ipv4()
+z.ipv6()
+z.union([z.ipv4(), z.ipv6()]) // For both
+```
+
+**Unified Error Parameter:**
+```typescript
+// ❌ OLD — message/errorMap fragmented
+z.string().min(5, { message: 'Too short' });
+z.string({ errorMap: (issue, ctx) => ({ message: '...' }) });
+
+// ✅ NEW — Unified error param
 z.string().min(5, { error: 'Too short' });
 z.string().min(5, { error: (issue) => `Min length is ${issue.minimum}` });
+z.string({ error: 'Must be a string' });
 ```
+
+**Refinements Now Internal:**
+```typescript
+// Internal change: refinements live inside schemas as "checks"
+// External API mostly unchanged, but affects custom schema creation
+```
+
+### Zod 4 New Features
+
+**@zod/mini (~1.9 KB gzipped):**
+```typescript
+// NEW — Tree-shakable validation for frontend
+import { string, email, object, parse } from '@zod/mini';
+
+// Standalone functions instead of method chaining
+const schema = object({
+  email: email(),
+  name: string(),
+});
+
+const result = parse(schema, data); // Tree-shakes unused validators
+```
+
+**z.stringbool() for Form Inputs:**
+```typescript
+// NEW — Converts string booleans to actual booleans
+const schema = z.object({
+  rememberMe: z.stringbool(), // "true", "false", "1", "0" → boolean
+});
+
+schema.parse({ rememberMe: 'true' }); // { rememberMe: true }
+schema.parse({ rememberMe: '0' });    // { rememberMe: false }
+```
+
+**z.interface() for Recursive Types:**
+```typescript
+// NEW — Better recursive type handling
+const Category = z.interface({
+  name: z.string(),
+  children: z.lazy(() => z.array(Category)),
+});
+```
+
+**Locales API:**
+```typescript
+// NEW — Global error message translation
+import { z, setLocale } from 'zod';
+
+setLocale({
+  string: {
+    email: 'Email invalide',
+    min: ({ minimum }) => `Minimum ${minimum} caractères`,
+  },
+});
+```
+
+**z.prettifyError():**
+```typescript
+// NEW — User-friendly error formatting
+const result = schema.safeParse(data);
+if (!result.success) {
+  console.log(z.prettifyError(result.error));
+  // "email: Invalid email address
+  //  password: String must contain at least 8 characters"
+}
+```
+
+### Migration Codemod
+
+```bash
+# Automate common migration tasks
+npx zod-v3-to-v4 src
+
+# Libraries supporting both v3 and v4 simultaneously:
+# - Hono
+# - LangChain
+# - React Hook Form
+```
+
+### Zod Mini vs Zod
+
+| Aspect | Zod | @zod/mini |
+|--------|-----|-----------|
+| Bundle | ~12 KB | ~1.9 KB |
+| Style | Method chaining | Standalone functions |
+| Tree-shaking | Partial | Full |
+| Use case | Full validation | Frontend-critical |
 
 ---
 

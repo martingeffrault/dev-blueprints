@@ -677,18 +677,184 @@ async fn heavy_computation() -> Result<i64, String> {
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 2.0 | Oct 2024 | Mobile support, new plugin system, capabilities |
-| 2.1 | Jan 2025 | Improved mobile stability, better error messages |
-| 2.2 | Apr 2025 | Performance improvements, new APIs |
+| **2.6** | Dec 2025 | Stability improvements, new plugin APIs |
+| **2.0** | Oct 2024 | Mobile support (iOS/Android), ACL permissions, multi-webview |
+| 1.x | Legacy | Desktop only, different permission model |
+
+### Tauri 2.0 Breaking Changes
+
+**TrayIconEvent Structure:**
+```rust
+// ❌ OLD — TrayIconEvent was a struct
+struct TrayIconEvent {
+    click_type: ClickType,
+    // ...
+}
+
+// ✅ NEW — TrayIconEvent is an enum
+enum TrayIconEvent {
+    Click { button: MouseButton, button_state: MouseButtonState, ... },
+    Enter { ... },
+    Leave { ... },
+    Move { ... },
+}
+
+// ❌ OLD — ClickType enum
+enum ClickType { Left, Right, Double }
+
+// ✅ NEW — MouseButton enum
+enum MouseButton { Left, Right, Middle }
+```
+
+**IPC Payload Structure:**
+```typescript
+// ❌ OLD — Payload was unpacked and flattened
+// Commands with args named cmd, callback, error, options, or payload broke IPC
+
+// ✅ NEW — Payload not flattened
+// All argument names work correctly now
+#[tauri::command]
+fn my_command(
+    cmd: String,      // Now works!
+    callback: String, // Now works!
+    payload: Data,    // Now works!
+) -> Result<(), String> {
+    Ok(())
+}
+```
+
+**Android Target SDK:**
+```toml
+# Updated from 33 to 34
+# src-tauri/gen/android/app/build.gradle.kts
+android {
+    compileSdk = 34
+    targetSdk = 34
+}
+```
 
 ### Tauri 2.0 Key Features
 
-- **Mobile Support**: Android and iOS production-ready
-- **Capabilities System**: Fine-grained permissions per window
-- **Plugin Ecosystem**: Official plugins for shell, dialog, fs, etc.
-- **tauri-specta**: Type-safe TypeScript bindings
-- **Improved IPC**: Better serialization performance
-- **Security Audited**: Full audit for 2.0 release
+**Mobile Support (iOS & Android):**
+```bash
+# Development
+npm run tauri android dev
+npm run tauri ios dev
+
+# Build
+npm run tauri android build
+npm run tauri ios build
+```
+
+**Native Mobile Plugins:**
+```rust
+// Swift (iOS) via Plugin subclass
+// Kotlin (Android) via @Command annotation
+
+// Or call native code from Rust commands
+#[tauri::command]
+async fn scan_barcode(app: AppHandle) -> Result<String, String> {
+    // Plugin handles native iOS/Android barcode scanning
+    app.barcode_scanner().scan().await
+}
+```
+
+**Mobile Plugins Available:**
+- NFC
+- Barcode Scanner
+- Biometric Authentication
+- Haptics
+- Geolocation
+
+**Multiple Webviews per Window:**
+```rust
+use tauri::{WebviewUrl, WebviewWindowBuilder};
+
+// Add second webview to existing window
+let main_window = app.get_webview_window("main").unwrap();
+let webview2 = main_window.add_child(
+    WebviewBuilder::new("panel", WebviewUrl::App("panel.html".into()))
+        .bounds(Rect { x: 0, y: 500, width: 800, height: 200 })
+)?;
+```
+
+**Access Control List (ACL):**
+```json
+// src-tauri/capabilities/main.json
+{
+  "identifier": "main-window",
+  "windows": ["main"],
+  "permissions": [
+    "fs:allow-read",
+    {
+      "identifier": "http:allow-fetch",
+      "allow": [{ "url": "https://api.example.com/*" }]
+    }
+  ]
+}
+
+// src-tauri/capabilities/settings.json
+{
+  "identifier": "settings-window",
+  "windows": ["settings"],
+  "permissions": [
+    "store:default"  // Only storage access, no network
+  ]
+}
+```
+
+**HMR for Mobile Development:**
+```bash
+# Hot Module Replacement works on mobile!
+# No full rebuild needed for frontend changes
+npm run tauri android dev
+# Edit src/App.tsx → instant preview on device
+```
+
+**Localhost Dev Server for Mobile:**
+```bash
+# Connect to localhost from device/emulator
+# (No need to expose on public network)
+npm run tauri android dev --host
+```
+
+### Plugin Version Strategy
+
+```toml
+# Plugins follow Tauri major version
+# Tauri 2.x → Plugin 2.x
+
+[dependencies]
+tauri = "2"
+tauri-plugin-shell = "2"    # Matches Tauri major version
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+
+# Minor plugin versions may have API changes
+# but will try to minimize breaking changes
+```
+
+### Mobile Development Tips
+
+```rust
+// Conditional compilation for mobile-specific code
+#[cfg(mobile)]
+fn mobile_only_feature() {
+    // iOS/Android only
+}
+
+#[cfg(desktop)]
+fn desktop_only_feature() {
+    // macOS/Windows/Linux only
+}
+
+// Platform-specific plugins
+#[cfg(target_os = "android")]
+use tauri_plugin_barcode_scanner;
+
+#[cfg(target_os = "ios")]
+use tauri_plugin_biometric;
+```
 
 ---
 

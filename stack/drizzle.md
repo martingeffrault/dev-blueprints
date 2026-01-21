@@ -449,53 +449,184 @@ npx drizzle-kit generate
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
-| 0.30 | 2024 | Relational queries v2 preview |
-| 0.33 | 2024 | Improved PostgreSQL support |
-| 0.44 | Late 2024 | Last stable v0 release |
-| **1.0-beta.1** | Jan 2025 | RQBv2 stable, schema in relations |
-| **1.0-beta.2** | Feb 2025 | **MSSQL support**, native Bun/Deno, tsx loader |
+| **1.0-beta.2** | Nov 2025 | MSSQL support, Effect driver, RQBv2, .array() breaking change |
+| **1.0-beta.1** | Sep 2025 | RQBv2 object-based syntax, many-to-many support |
+| **0.44** | 2024 | Last stable v0 release |
+| **Kit 0.30** | 2024 | PostgreSQL DDL changes (IF NOT EXISTS removed) |
 
 ### Drizzle 1.0 Breaking Changes
 
-**RQBv2 Syntax Change:**
+**Postgres .array() Breaking Change:**
 ```typescript
-// v1 (deprecated → moved to db._query)
+// ❌ OLD — Chainable array
+const tags = pgTable('tags', {
+  names: text('names').array().array(), // 2D array
+});
+
+// ✅ NEW — Dimension in argument
+const tags = pgTable('tags', {
+  names: text('names').array('[][]'), // 2D array
+  names3d: text('names').array('[][][]'), // 3D array
+});
+```
+
+**Relational Queries v2 (Object-Based Syntax):**
+```typescript
+// ❌ OLD — Callback-based (moved to db._query)
 import { relations } from 'drizzle-orm';
 export const usersRelations = relations(users, ({ many }) => ({
   posts: many(posts),
 }));
 
-// v2 (new in 1.0) — schema IN the relations definition
+const result = await db.query.users.findMany({
+  with: { posts: true },
+});
+
+// ✅ NEW — Object-based with full filtering
 import { defineRelations } from 'drizzle-orm';
+
 export const relations = defineRelations(schema, (r) => ({
   users: r.users({
     posts: r.many.posts(),
   }),
 }));
-```
 
-**drizzle-kit Changes:**
-- Migrated from `esbuild-register` to `tsx` loader
-- Native Bun and Deno support
-- `drizzle-kit pull` now generates `relations.ts` in new syntax
-
-### Relational Queries v2 Features
-
-```typescript
-// v1 (deprecated)
-const result = await db.query.users.findMany({
-  with: { posts: true },
-});
-
-// v2 (current)
+// db.query now uses object-based patterns
 const result = await db.query.users.findMany({
   with: {
     posts: {
-      where: eq(posts.published, true),
+      where: and(
+        eq(posts.published, true),
+        gt(posts.createdAt, new Date('2025-01-01'))
+      ),
       orderBy: desc(posts.createdAt),
+      limit: 10,
     },
   },
 });
+```
+
+**Many-to-Many Relations (Finally!):**
+```typescript
+// NEW — First-class many-to-many support
+const usersToGroups = pgTable('users_to_groups', {
+  userId: uuid('user_id').references(() => users.id),
+  groupId: uuid('group_id').references(() => groups.id),
+});
+
+export const relations = defineRelations(schema, (r) => ({
+  users: r.users({
+    groups: r.many.groups.through(usersToGroups), // Many-to-many!
+  }),
+  groups: r.groups({
+    users: r.many.users.through(usersToGroups),
+  }),
+}));
+```
+
+**RQBv2 Advanced Filtering:**
+```typescript
+// NEW — AND, OR, NOT, RAW in relations
+const result = await db.query.posts.findMany({
+  where: or(
+    eq(posts.status, 'published'),
+    and(
+      eq(posts.authorId, currentUserId),
+      eq(posts.status, 'draft')
+    )
+  ),
+  with: {
+    author: true,
+    comments: {
+      where: not(eq(comments.spam, true)),
+      limit: 5,
+    },
+  },
+});
+```
+
+**drizzle-kit 0.30+ Breaking Changes:**
+```bash
+# ❌ OLD — PostgreSQL included IF NOT EXISTS, $DO
+# DDL errors were swallowed if object already existed
+
+# ✅ NEW — Aligned with other dialects
+# DDL statements fail properly on conflicts
+# Migration errors are now visible
+```
+
+### New Features in 1.0
+
+**Effect Driver Support:**
+```typescript
+// NEW — Native @effect/sql-pg support
+import * as Effect from 'effect';
+import { drizzle } from 'drizzle-orm/effect';
+
+const db = drizzle(/* effect sql client */);
+
+// Query builder supports both Effect and Promise flows
+const users = db.select().from(usersTable); // EffectLike | PromiseLike
+```
+
+**PostgreSQL Identity Columns:**
+```typescript
+// ❌ OLD — serial (outdated, deprecated)
+id: serial('id').primaryKey(),
+
+// ✅ NEW — Identity columns (recommended)
+id: integer('id').primaryKey().generatedByDefaultAsIdentity(),
+// or
+id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+```
+
+**MySQL $returningId():**
+```typescript
+// MySQL doesn't support RETURNING
+// NEW — $returningId() gets the inserted ID
+const result = await db.insert(users)
+  .values({ name: 'John' })
+  .$returningId();
+
+console.log(result[0].id); // The auto-generated ID
+```
+
+**Seeding with Relations:**
+```typescript
+// NEW — Seed function understands relations
+import { seed } from 'drizzle-seed';
+
+await seed(db, schema, { count: 100 });
+// Automatically creates related records based on foreign keys
+
+// NEW — version parameter for reproducible seeds
+await seed(db, schema, { count: 100, version: 1 });
+
+// NEW — Cyclic table support
+// Tables with self-references can now be seeded
+```
+
+**defineRelationsPart Helper:**
+```typescript
+// NEW — Split relations across files
+// users-relations.ts
+export const userRelations = defineRelationsPart({
+  users: (r) => ({
+    posts: r.many.posts(),
+    profile: r.one.profiles(),
+  }),
+});
+
+// posts-relations.ts
+export const postRelations = defineRelationsPart({
+  posts: (r) => ({
+    author: r.one.users(),
+    comments: r.many.comments(),
+  }),
+});
+
+// index.ts — Combine
+export const relations = mergeRelations(userRelations, postRelations);
 ```
 
 ---
